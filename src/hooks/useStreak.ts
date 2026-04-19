@@ -1,0 +1,52 @@
+import { useLocalStorage } from './useLocalStorage';
+import { StreakData } from '../types';
+
+const today = () => new Date().toISOString().slice(0, 10);
+
+const daysBetween = (a: string, b: string) => {
+  const msPerDay = 86400000;
+  return Math.round((new Date(b).getTime() - new Date(a).getTime()) / msPerDay);
+};
+
+const isSunday = (dateStr: string) => new Date(dateStr).getDay() === 0;
+
+const defaultStreak: StreakData = {
+  current: 0,
+  lastWorkoutDate: '',
+  longest: 0,
+};
+
+export function useStreak() {
+  const [streak, setStreak] = useLocalStorage<StreakData>('wr_streak', defaultStreak);
+
+  const incrementStreak = () => {
+    const todayStr = today();
+    setStreak((prev) => {
+      if (prev.lastWorkoutDate === todayStr) return prev; // already logged today
+
+      let newCurrent = 1;
+      if (prev.lastWorkoutDate) {
+        const diff = daysBetween(prev.lastWorkoutDate, todayStr);
+        if (diff === 1) {
+          newCurrent = prev.current + 1;
+        } else if (diff === 2 && isSunday(prev.lastWorkoutDate + 'T12:00:00')) {
+          // Sunday was skipped, don't break streak
+          // Actually check if the gap day is a Sunday
+          const gapDate = new Date(prev.lastWorkoutDate);
+          gapDate.setDate(gapDate.getDate() + 1);
+          if (gapDate.getDay() === 0) {
+            newCurrent = prev.current + 1;
+          }
+        }
+      }
+
+      return {
+        current: newCurrent,
+        lastWorkoutDate: todayStr,
+        longest: Math.max(prev.longest, newCurrent),
+      };
+    });
+  };
+
+  return { streak, incrementStreak };
+}

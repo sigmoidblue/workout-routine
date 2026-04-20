@@ -34,23 +34,23 @@ export default function ExerciseItem({ exercise, workoutEx, onChange }: Props) {
         ? 'bg-emerald-50/60 border-emerald-100'
         : 'bg-white border-slate-100 shadow-sm'
     }`}>
-      {/* Main row */}
-      <div className="flex items-center gap-4 px-4 py-4">
-        {/* Checkbox */}
-        <button
-          onClick={toggleDone}
-          className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-150 ${
-            workoutEx.done
-              ? 'bg-emerald-500 border-emerald-500'
-              : 'border-slate-300 hover:border-indigo-400'
-          }`}
-        >
+      {/* Main row — entire row toggles done */}
+      <div
+        onClick={toggleDone}
+        className="flex items-center gap-4 px-4 py-4 cursor-pointer select-none"
+      >
+        {/* Checkbox (visual only) */}
+        <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-150 ${
+          workoutEx.done
+            ? 'bg-emerald-500 border-emerald-500'
+            : 'border-slate-300'
+        }`}>
           {workoutEx.done && (
             <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           )}
-        </button>
+        </div>
 
         {/* Name + muscle */}
         <div className="flex-1 min-w-0">
@@ -64,9 +64,9 @@ export default function ExerciseItem({ exercise, workoutEx, onChange }: Props) {
           )}
         </div>
 
-        {/* Log toggle */}
+        {/* Log toggle — stopPropagation so it doesn't trigger toggleDone */}
         <button
-          onClick={() => setShowLog((v) => !v)}
+          onClick={(e) => { e.stopPropagation(); setShowLog((v) => !v); }}
           className={`text-xs px-2.5 py-1 rounded-lg transition-colors duration-100 ${
             showLog
               ? 'text-indigo-600 bg-indigo-50'

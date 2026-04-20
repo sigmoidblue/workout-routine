@@ -157,7 +157,7 @@ export default function Session({ category, exercises, existingLog, onFinish, on
       {toast && (
         <div
           key={toast.key}
-          className="toast-animate pointer-events-none fixed top-6 left-1/2 -translate-x-1/2 z-40"
+          className="toast-animate pointer-events-none fixed top-6 left-0 right-0 flex justify-center px-6 z-40"
         >
           <div className="bg-slate-900 text-white text-sm font-medium px-5 py-2.5 rounded-full shadow-lg shadow-slate-900/20 whitespace-nowrap">
             {toast.msg}

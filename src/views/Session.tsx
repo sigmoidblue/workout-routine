@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Category, Exercise, WorkoutLog, WorkoutExercise } from '../types';
 import { useExercisePicker } from '../hooks/useExercisePicker';
 import ProgressRing from '../components/ProgressRing';
 import ExerciseItem from '../components/ExerciseItem';
+import TimerSheet from '../components/TimerSheet';
 
 type Props = {
   category: Category;
@@ -92,17 +93,25 @@ export default function Session({ category, exercises, existingLog, onFinish, on
   const [showConfetti, setShowConfetti] = useState(false);
   const [pulsing, setPulsing] = useState(false);
   const [toast, setToast] = useState<{ msg: string; key: number } | null>(null);
+  const [showTimer, setShowTimer] = useState(false);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const handleTimerClose = useCallback(() => setShowTimer(false), []);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevCompleted = useRef(0);
 
   useEffect(() => {
     if (existingLog) {
       setWorkoutExercises(existingLog.exercises);
-    } else {
-      setWorkoutExercises(
-        picked.map((ex) => ({ exerciseId: ex.id, done: false, sets: [] }))
-      );
+      return;
     }
+    setWorkoutExercises((current) => {
+      const doneItems = current.filter((e) => e.done);
+      const doneIds = new Set(doneItems.map((e) => e.exerciseId));
+      const newItems = picked
+        .filter((ex) => !doneIds.has(ex.id))
+        .map((ex) => ({ exerciseId: ex.id, done: false, sets: [] }));
+      return [...doneItems, ...newItems];
+    });
   }, [picked, existingLog]);
 
   const completed = workoutExercises.filter((e) => e.done).length;
@@ -237,22 +246,48 @@ export default function Session({ category, exercises, existingLog, onFinish, on
 
       {/* Finish Button */}
       <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-6 bg-gradient-to-t from-slate-50 via-slate-50/90 to-transparent">
-        <button
-          onClick={handleFinish}
-          disabled={completed === 0}
-          className={`w-full py-4 rounded-2xl font-semibold text-base transition-all duration-150 ${
-            completed > 0
-              ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 active:scale-[0.98]'
-              : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-          }`}
-        >
-          {completed === total && total > 0
-            ? 'Finish Workout'
-            : completed > 0
-            ? `Finish  ·  ${completed} of ${total} done`
-            : 'Check off exercises to finish'}
-        </button>
+        <div className="flex gap-3">
+          {/* Timer button */}
+          <button
+            onClick={() => setShowTimer((v) => !v)}
+            className={`relative flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${
+              showTimer
+                ? 'bg-indigo-600 text-white'
+                : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300 shadow-sm'
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <circle cx="12" cy="12" r="9" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 7v5l3 3" />
+            </svg>
+            {timerRunning && !showTimer && (
+              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+            )}
+          </button>
+
+          <button
+            onClick={handleFinish}
+            disabled={completed === 0}
+            className={`flex-1 py-4 rounded-2xl font-semibold text-base transition-all duration-150 ${
+              completed > 0
+                ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200 active:scale-[0.98]'
+                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+            }`}
+          >
+            {completed === total && total > 0
+              ? 'Finish Workout'
+              : completed > 0
+              ? `Finish  ·  ${completed} of ${total} done`
+              : 'Check off exercises to finish'}
+          </button>
+        </div>
       </div>
+
+      <TimerSheet
+        visible={showTimer}
+        onClose={handleTimerClose}
+        onRunningChange={setTimerRunning}
+      />
     </div>
   );
 }

@@ -26,8 +26,8 @@ export default function TimerSheet({ visible, onClose, onRunningChange }: Props)
 
   // Direct DOM ref — all position updates bypass React to avoid re-renders during drag
   const sheetRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
   const partialHeightRef = useRef(440);
-  const partialContentRef = useRef<HTMLDivElement>(null);
 
   // Drag refs — all refs so no re-renders during pointer move
   const dragging = useRef(false);
@@ -66,25 +66,35 @@ export default function TimerSheet({ visible, onClose, onRunningChange }: Props)
     }
   }, []);
 
+  const measurePartialHeight = () => {
+    if (!innerRef.current) return;
+    const total = Array.from(innerRef.current.children).reduce(
+      (sum, child) => sum + (child as HTMLElement).offsetHeight, 0
+    );
+    if (total > 50) partialHeightRef.current = total;
+  };
+
   useEffect(() => {
     if (visible) {
-      // Start off-screen, then slide into partial position
+      measurePartialHeight(); // measure before animating in so height is correct
       move(window.innerHeight);
       setFullscreen(false);
       requestAnimationFrame(() => move(partialOffset(), true));
     } else {
       move(window.innerHeight, true);
       setFullscreen(false);
+      setRestDone(false);
+      setRestRunning(false);
+      setRestRemaining(restDuration);
     }
   }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Measure partial content height (re-measure when tabs switch)
+  // Re-measure and reposition when switching tabs while sheet is open
   useEffect(() => {
-    if (partialContentRef.current && !fullscreen) {
-      const h = partialContentRef.current.offsetHeight;
-      if (h > 50) partialHeightRef.current = h;
-    }
-  }, [mode, fullscreen]);
+    if (!visible || fullscreen) return;
+    measurePartialHeight();
+    move(partialOffset(), true);
+  }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── snap ──────────────────────────────────────────────────────────────────
 
@@ -225,7 +235,7 @@ export default function TimerSheet({ visible, onClose, onRunningChange }: Props)
           style={{ height: '100dvh', willChange: 'transform' }}
         >
           {/* ── inner flex column ── */}
-          <div className="flex flex-col h-full">
+          <div ref={innerRef} className="flex flex-col h-full">
 
             {/* Drag handle — touch target for swipe */}
             <div
@@ -254,10 +264,7 @@ export default function TimerSheet({ visible, onClose, onRunningChange }: Props)
             </div>
 
             {/* Timer content */}
-            <div
-              ref={partialContentRef}
-              className={`flex flex-col items-center px-5 ${isFs ? 'flex-1 justify-center pb-16' : 'pt-8 pb-4 flex-shrink-0'}`}
-            >
+            <div className={`flex flex-col items-center px-5 ${isFs ? 'flex-1 justify-center pb-16' : 'pt-8 pb-4 flex-shrink-0'}`}>
               {mode === 'stopwatch' ? (
                 <>
                   <p className={`font-bold tabular-nums tracking-tight leading-none ${isFs ? 'text-9xl' : 'text-7xl'} ${
@@ -284,7 +291,7 @@ export default function TimerSheet({ visible, onClose, onRunningChange }: Props)
                     restDone ? 'text-emerald-500' : restRunning ? 'text-indigo-600' : 'text-slate-900'
                   }`}>{fmt(restRemaining)}</p>
                   <p className={`text-xs mt-3 uppercase tracking-widest font-medium ${restDone ? 'text-emerald-400' : 'text-slate-400'}`}>
-                    {restDone ? 'Rest complete!' : 'Remaining'}
+                    {restDone ? "Break's over, let's go!" : 'Remaining'}
                   </p>
 
                   <div className="flex gap-2 mt-6">

@@ -59,10 +59,11 @@ export default function TimerSheet({ visible, onClose, onRunningChange }: Props)
 
   // ── show / hide ────────────────────────────────────────────────────────────
 
-  // Position off-screen before first paint so it never flashes visible
+  // Hide completely before first paint — visibility:hidden removes shadow bleed too
   useLayoutEffect(() => {
     if (sheetRef.current) {
       sheetRef.current.style.transform = `translateY(${window.innerHeight}px)`;
+      sheetRef.current.style.visibility = 'hidden';
     }
   }, []);
 
@@ -76,7 +77,8 @@ export default function TimerSheet({ visible, onClose, onRunningChange }: Props)
 
   useEffect(() => {
     if (visible) {
-      measurePartialHeight(); // measure before animating in so height is correct
+      measurePartialHeight();
+      if (sheetRef.current) sheetRef.current.style.visibility = 'visible';
       move(window.innerHeight);
       setFullscreen(false);
       requestAnimationFrame(() => move(partialOffset(), true));
@@ -86,6 +88,10 @@ export default function TimerSheet({ visible, onClose, onRunningChange }: Props)
       setRestDone(false);
       setRestRunning(false);
       setRestRemaining(restDuration);
+      // Hide after slide-out animation so shadow doesn't bleed into viewport
+      setTimeout(() => {
+        if (sheetRef.current) sheetRef.current.style.visibility = 'hidden';
+      }, 350);
     }
   }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
 

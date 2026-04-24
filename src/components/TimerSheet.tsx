@@ -227,8 +227,8 @@ export default function TimerSheet({ visible, onClose, onRunningChange }: Props)
         <div className="fixed inset-0 bg-black/20 z-40" onClick={onClose} />
       )}
 
-      {/* Outer wrapper — pointer-events only when visible */}
-      <div className={`fixed inset-0 z-50 ${visible ? 'pointer-events-none' : 'pointer-events-none'}`}>
+      {/* Outer wrapper — overflow-hidden clips the sheet when it's translated below viewport */}
+      <div className="fixed inset-0 z-50 pointer-events-none overflow-hidden">
         <div
           ref={sheetRef}
           className="absolute bottom-0 left-0 right-0 max-w-md mx-auto bg-white rounded-t-3xl shadow-2xl pointer-events-auto"

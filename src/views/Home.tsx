@@ -24,7 +24,7 @@ export default function Home({ onStart, onLibrary, workouts }: Props) {
       <div className="px-5 pt-10 pb-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-medium text-slate-400 uppercase tracking-widest mb-1">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-widest mb-1">
               {new Date().toLocaleDateString('en-US', { weekday: 'long' })}
             </p>
             <h1 className="text-2xl font-bold text-slate-900 leading-tight">
@@ -56,7 +56,7 @@ export default function Home({ onStart, onLibrary, workouts }: Props) {
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-800">Workout logged</p>
-                <p className="text-xs text-slate-400 capitalize">{todayWorkout.category} session</p>
+                <p className="text-xs text-slate-500 capitalize">{todayWorkout.category} session</p>
               </div>
             </div>
             <button
@@ -71,7 +71,7 @@ export default function Home({ onStart, onLibrary, workouts }: Props) {
 
       {/* Section label */}
       <div className="px-5 pb-3">
-        <p className="text-xs font-medium text-slate-400 uppercase tracking-widest">
+        <p className="text-xs font-medium text-slate-500 uppercase tracking-widest">
           Choose your workout
         </p>
       </div>

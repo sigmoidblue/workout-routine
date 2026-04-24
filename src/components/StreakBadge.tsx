@@ -10,7 +10,7 @@ export default function StreakBadge({ streak }: Props) {
       </svg>
       <span className="text-slate-700 font-semibold text-sm leading-none">
         {streak.current}
-        <span className="font-normal text-slate-400 ml-1">
+        <span className="font-normal text-slate-500 ml-1">
           {streak.current === 1 ? 'day' : 'days'}
         </span>
       </span>

@@ -40,7 +40,7 @@ export default function Library({ exercises, onAdd, onDelete, onBack }: Props) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col">
       {/* Header */}
       <div className="px-5 pt-10 pb-5">
         <div className="flex items-center gap-3">
@@ -53,7 +53,7 @@ export default function Library({ exercises, onAdd, onDelete, onBack }: Props) {
             </svg>
           </button>
           <div className="flex-1">
-            <p className="text-xs font-medium text-slate-400 uppercase tracking-widest">Library</p>
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-widest">Library</p>
             <h1 className="text-xl font-bold text-slate-900">Exercises</h1>
           </div>
           <button
@@ -79,7 +79,7 @@ export default function Library({ exercises, onAdd, onDelete, onBack }: Props) {
       {/* Add Form */}
       {showForm && (
         <div className="mx-5 mb-4 bg-white border border-slate-100 rounded-2xl p-4 space-y-3 shadow-sm animate-slide-up">
-          <p className="text-xs font-medium text-slate-400 uppercase tracking-widest">New exercise</p>
+          <p className="text-xs font-medium text-slate-500 uppercase tracking-widest">New exercise</p>
           <input
             type="text"
             placeholder="Exercise name"
@@ -141,7 +141,7 @@ export default function Library({ exercises, onAdd, onDelete, onBack }: Props) {
           if (grouped[cat].length === 0) return null;
           return (
             <div key={cat}>
-              <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-2">
+              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mb-2">
                 {CATEGORY_LABELS[cat]}
               </p>
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden divide-y divide-slate-50">
@@ -150,7 +150,7 @@ export default function Library({ exercises, onAdd, onDelete, onBack }: Props) {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-slate-800 truncate">{ex.name}</p>
                       {ex.muscle && (
-                        <p className="text-xs text-slate-400 capitalize mt-0.5">{ex.muscle}</p>
+                        <p className="text-xs text-slate-500 capitalize mt-0.5">{ex.muscle}</p>
                       )}
                     </div>
                     <button
@@ -168,7 +168,7 @@ export default function Library({ exercises, onAdd, onDelete, onBack }: Props) {
           );
         })}
         {filtered.length === 0 && (
-          <p className="text-slate-400 text-sm text-center pt-12">No exercises here yet.</p>
+          <p className="text-slate-500 text-sm text-center pt-12">No exercises here yet.</p>
         )}
       </div>
     </div>

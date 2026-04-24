@@ -88,7 +88,9 @@ function Confetti() {
 }
 
 export default function Session({ category, exercises, existingLog, onFinish, onBack }: Props) {
-  const { picked, reroll } = useExercisePicker(exercises, category);
+  const poolSize = exercises.filter((e) => e.category === category).length;
+  const [count, setCount] = useState(Math.min(7, poolSize));
+  const { picked, reroll } = useExercisePicker(exercises, category, count);
   const [workoutExercises, setWorkoutExercises] = useState<WorkoutExercise[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [pulsing, setPulsing] = useState(false);
@@ -159,7 +161,7 @@ export default function Session({ category, exercises, existingLog, onFinish, on
   const milestoneMsg = getMilestoneMsg(completed, total);
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col">
       {showConfetti && <Confetti />}
 
       {/* Toast */}
@@ -186,21 +188,39 @@ export default function Session({ category, exercises, existingLog, onFinish, on
             </svg>
           </button>
           <div className="flex-1">
-            <p className="text-xs font-medium text-slate-400 uppercase tracking-widest">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-widest">
               {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </p>
             <h1 className="text-xl font-bold text-slate-900">{CATEGORY_LABELS[category]}</h1>
           </div>
           {!existingLog && (
-            <button
-              onClick={reroll}
-              className="flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 bg-white border border-slate-200 shadow-sm hover:border-slate-300 px-3 py-2 rounded-xl transition-colors"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Shuffle
-            </button>
+            <div className="flex items-center bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
+              <button
+                onClick={() => setCount((c) => Math.max(2, c - 1))}
+                className="px-2.5 py-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors border-r border-slate-100"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
+                </svg>
+              </button>
+              <button
+                onClick={reroll}
+                className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {count}
+              </button>
+              <button
+                onClick={() => setCount((c) => Math.min(poolSize, c + 1))}
+                className="px-2.5 py-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors border-l border-slate-100"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            </div>
           )}
         </div>
 
@@ -217,7 +237,7 @@ export default function Session({ category, exercises, existingLog, onFinish, on
                 {milestoneMsg}
               </p>
             ) : (
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 {total > 0 ? `${total} exercises` : ''}
               </p>
             )}
@@ -245,7 +265,7 @@ export default function Session({ category, exercises, existingLog, onFinish, on
       </div>
 
       {/* Finish Button */}
-      <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-6 bg-gradient-to-t from-slate-50 via-slate-50/90 to-transparent">
+      <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-6 bg-gradient-to-t from-[#eef1f8] via-[#eef1f8]/90 to-transparent">
         <div className="flex gap-3">
           {/* Timer button */}
           <button

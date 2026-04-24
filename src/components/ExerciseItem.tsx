@@ -60,7 +60,7 @@ export default function ExerciseItem({ exercise, workoutEx, onChange }: Props) {
             {exercise.name}
           </p>
           {exercise.muscle && (
-            <p className="text-xs text-slate-400 capitalize mt-0.5">{exercise.muscle}</p>
+            <p className="text-xs text-slate-500 capitalize mt-0.5">{exercise.muscle}</p>
           )}
         </div>
 
@@ -105,7 +105,7 @@ export default function ExerciseItem({ exercise, workoutEx, onChange }: Props) {
                     onChange={(e) => updateSet(i, { ...set, reps: Number(e.target.value) })}
                     className="w-14 bg-slate-50 text-slate-800 text-sm rounded-lg px-2 py-1.5 border border-slate-200 focus:outline-none focus:border-indigo-400 text-center"
                   />
-                  <span className="text-xs text-slate-400">reps</span>
+                  <span className="text-xs text-slate-500">reps</span>
                   <input
                     type="number"
                     min={0}
@@ -119,7 +119,7 @@ export default function ExerciseItem({ exercise, workoutEx, onChange }: Props) {
                     }
                     className="w-14 bg-slate-50 text-slate-800 text-sm rounded-lg px-2 py-1.5 border border-slate-200 focus:outline-none focus:border-indigo-400 text-center"
                   />
-                  <span className="text-xs text-slate-400">kg</span>
+                  <span className="text-xs text-slate-500">kg</span>
                   <button
                     onClick={() => removeSet(i)}
                     className="text-slate-300 hover:text-red-400 transition-colors p-1 ml-auto"

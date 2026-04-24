@@ -73,11 +73,11 @@ export default function Summary({ log, exercises, streak, onDone }: Props) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col">
       {/* Header */}
       <div className="px-5 pt-10 pb-6 flex items-center gap-3">
         <div className="flex-1">
-          <p className="text-xs font-medium text-slate-400 uppercase tracking-widest">Workout summary</p>
+          <p className="text-xs font-medium text-slate-500 uppercase tracking-widest">Workout summary</p>
           <h1 className="text-2xl font-bold text-slate-900 mt-0.5">Nice work!</h1>
         </div>
         {streak.current > 0 && (
@@ -87,7 +87,7 @@ export default function Summary({ log, exercises, streak, onDone }: Props) {
             </svg>
             <span className="text-slate-700 font-semibold text-sm leading-none">
               {streak.current}
-              <span className="font-normal text-slate-400 ml-1">{streak.current === 1 ? 'day' : 'days'}</span>
+              <span className="font-normal text-slate-500 ml-1">{streak.current === 1 ? 'day' : 'days'}</span>
             </span>
           </div>
         )}
@@ -107,7 +107,7 @@ export default function Summary({ log, exercises, streak, onDone }: Props) {
                 </p>
               </div>
               <p className="text-slate-800 font-bold text-lg leading-tight">Workout complete</p>
-              <p className="text-slate-400 text-sm mt-0.5">{formatDate(log.date)}</p>
+              <p className="text-slate-500 text-sm mt-0.5">{formatDate(log.date)}</p>
             </div>
 
             {/* Exercise list */}
@@ -134,7 +134,7 @@ export default function Summary({ log, exercises, streak, onDone }: Props) {
                         {ex.name}
                       </p>
                       {setsDone.length > 0 && (
-                        <p className="text-xs text-slate-400 mt-0.5">
+                        <p className="text-xs text-slate-500 mt-0.5">
                           {setsDone.map((s, i) => (
                             <span key={i}>
                               {i > 0 && <span className="mx-1 text-slate-200">·</span>}
@@ -153,7 +153,7 @@ export default function Summary({ log, exercises, streak, onDone }: Props) {
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
               <p className="text-sm text-slate-500">
                 <span className="font-semibold text-slate-800">{done.length}</span>
-                <span className="text-slate-400"> of {total} completed</span>
+                <span className="text-slate-500"> of {total} completed</span>
               </p>
               {streak.current > 0 && (
                 <p className="text-xs font-semibold text-indigo-500">

@@ -31,7 +31,7 @@ export default function ProgressRing({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="#E2E8F0"
+          stroke="#CBD5E1"
           strokeWidth={strokeWidth}
         />
         {/* Progress arc */}
@@ -50,9 +50,9 @@ export default function ProgressRing({
       </svg>
       <div className="absolute flex flex-col items-center">
         <span className="text-2xl font-bold text-slate-900 leading-none">
-          {completed}<span className="text-slate-300 font-light">/{total}</span>
+          {completed}<span className="text-slate-400 font-light">/{total}</span>
         </span>
-        <span className="text-[11px] text-slate-400 mt-1 uppercase tracking-wider font-medium">
+        <span className="text-[11px] text-slate-500 mt-1 uppercase tracking-wider font-medium">
           {isComplete ? 'Complete' : 'Done'}
         </span>
       </div>

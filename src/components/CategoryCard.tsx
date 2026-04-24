@@ -37,7 +37,7 @@ export default function CategoryCard({ category, onClick, hasWorkout }: Props) {
           </div>
           <div>
             <p className="text-slate-900 font-semibold text-base leading-tight">{label}</p>
-            <p className="text-slate-400 text-xs mt-1 leading-snug">{sub}</p>
+            <p className="text-slate-500 text-xs mt-1 leading-snug">{sub}</p>
           </div>
         </div>
         <svg

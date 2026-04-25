@@ -41,3 +41,15 @@ export type StreakData = {
 };
 
 export type View = 'home' | 'session' | 'library' | 'summary';
+
+export type WorkoutGoal = 'strength' | 'muscle' | 'athletic';
+export type WorkoutEquipment = 'gym' | 'dumbbells' | 'home';
+export type WorkoutExperience = 'beginner' | 'intermediate';
+export type WorkoutDuration = 30 | 45 | 60;
+
+export type WorkoutFilters = {
+  goal: WorkoutGoal | null;
+  equipment: WorkoutEquipment | null;
+  experience: WorkoutExperience | null;
+  duration: WorkoutDuration | null;
+};

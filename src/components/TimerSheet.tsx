@@ -218,7 +218,19 @@ export default function TimerSheet({ visible, onClose, onRunningChange }: Props)
     return () => { if (restInterval.current) clearInterval(restInterval.current); };
   }, [restRunning]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const setPreset = (s: number) => { setRestDuration(s); setRestRemaining(s); setRestRunning(false); setRestDone(false); };
+  const MAX_REST = 600; // 10 minutes
+
+  const setPreset = (s: number) => {
+    // Clear interval immediately — don't wait for useEffect to avoid race with tick
+    if (restInterval.current) {
+      clearInterval(restInterval.current);
+      restInterval.current = null;
+    }
+    setRestDuration(s);
+    setRestRemaining(s);
+    setRestRunning(false);
+    setRestDone(false);
+  };
   const resetSw = () => { setSwRunning(false); setSwElapsed(0); };
   const handleRestToggle = () => { unlockAudio(); setRestRunning(r => !r); };
   const handleSwToggle = () => { unlockAudio(); setSwRunning(r => !r); };
@@ -316,7 +328,7 @@ export default function TimerSheet({ visible, onClose, onRunningChange }: Props)
 
                   <div className="flex gap-2 mt-2">
                     <button onClick={() => setPreset(Math.max(15, restDuration - 15))} className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors select-none">−15s</button>
-                    <button onClick={() => setPreset(Math.min(3600, restDuration + 15))} className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors select-none">+15s</button>
+                    <button onClick={() => setPreset(Math.min(MAX_REST, restDuration + 15))} className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors select-none">+15s</button>
                   </div>
 
                   <div className="flex gap-3 mt-8">
@@ -330,9 +342,11 @@ export default function TimerSheet({ visible, onClose, onRunningChange }: Props)
                         {restRunning ? 'Pause' : 'Start'}
                       </button>
                     )}
-                    <button onClick={() => setPreset(restDuration)} className="px-6 py-3.5 rounded-2xl text-sm text-slate-400 bg-slate-100 hover:bg-slate-200 transition-colors">
-                      {restDone ? 'Again' : 'Reset'}
-                    </button>
+                    {(restDone || restRunning || restRemaining < restDuration) && (
+                      <button onClick={() => setPreset(restDuration)} className="px-6 py-3.5 rounded-2xl text-sm text-slate-400 bg-slate-100 hover:bg-slate-200 transition-colors">
+                        {restDone ? 'Again' : 'Reset'}
+                      </button>
+                    )}
                   </div>
                 </>
               )}

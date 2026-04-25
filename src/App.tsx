@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Category, Exercise, WorkoutLog, View } from './types';
+import { Category, Exercise, WorkoutLog, View, WorkoutFilters } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useStreak } from './hooks/useStreak';
 import { defaultExercises } from './data/defaultExercises';
@@ -19,6 +19,9 @@ const goBack = () => history.back();
 export default function App() {
   const [exercises, setExercises] = useLocalStorage<Exercise[]>('wr_exercises', defaultExercises);
   const [workouts, setWorkouts] = useLocalStorage<WorkoutLog[]>('wr_workouts', []);
+  const [filters, setFilters] = useLocalStorage<WorkoutFilters>('wr_filters', {
+    goal: null, equipment: null, experience: null, duration: null,
+  });
   const { streak, incrementStreak } = useStreak();
 
   const [view, setView] = useState<View>('home');
@@ -119,6 +122,8 @@ export default function App() {
           history.pushState(null, '');
         }}
         workouts={workouts}
+        filters={filters}
+        onFiltersChange={setFilters}
       />
     </div>
   );

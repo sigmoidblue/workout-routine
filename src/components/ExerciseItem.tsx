@@ -104,7 +104,7 @@ export default function ExerciseItem({ exercise, workoutEx, onChange, alternativ
       {showSwap && (
         <div className="border-t border-slate-100 animate-slide-up px-4 pt-3 pb-4">
           <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2.5">
-            Swap · {exercise.muscle}
+            Swap exercise
           </p>
           {alternatives && alternatives.length > 0 ? (
             <div className="space-y-1.5">
@@ -123,7 +123,7 @@ export default function ExerciseItem({ exercise, workoutEx, onChange, alternativ
             </div>
           ) : (
             <p className="text-xs text-slate-400 italic">
-              No other {exercise.muscle} exercises in your library.
+              No other exercises available for this day.
             </p>
           )}
         </div>

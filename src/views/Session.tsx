@@ -163,7 +163,12 @@ export default function Session({ category, exercises, existingLog, onFinish, on
     const ex = getExercise(we.exerciseId);
     if (!ex?.muscle) return [];
     const inSession = new Set(workoutExercises.map((w) => w.exerciseId));
-    return exercises.filter((e) => e.muscle === ex.muscle && e.id !== ex.id && !inSession.has(e.id));
+    const pool = exercises.filter((e) => e.category === ex.category && e.id !== ex.id && !inSession.has(e.id));
+    return pool.sort((a, b) => {
+      const aMatch = a.muscle === ex.muscle ? 0 : 1;
+      const bMatch = b.muscle === ex.muscle ? 0 : 1;
+      return aMatch - bMatch;
+    });
   };
 
   const handleSwap = (index: number, newExerciseId: string) => {

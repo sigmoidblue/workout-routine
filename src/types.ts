@@ -13,6 +13,7 @@ export type Exercise = {
   name: string;
   category: Category;
   muscle?: string;
+  tip?: string;
 };
 
 export type SetLog = {

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Category, Exercise, WorkoutLog, View, WorkoutFilters } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useStreak } from './hooks/useStreak';
-import { defaultExercises } from './data/defaultExercises';
+import { defaultExercises, EXERCISES_SEED_VERSION } from './data/defaultExercises';
 import Home from './views/Home';
 import Session from './views/Session';
 import Summary from './views/Summary';
@@ -19,6 +19,7 @@ const goBack = () => history.back();
 export default function App() {
   const [exercises, setExercises] = useLocalStorage<Exercise[]>('wr_exercises', defaultExercises);
   const [workouts, setWorkouts] = useLocalStorage<WorkoutLog[]>('wr_workouts', []);
+  const [seedVersion, setSeedVersion] = useLocalStorage<number>('wr_seed_version', 0);
   const [filters, setFilters] = useLocalStorage<WorkoutFilters>('wr_filters', {
     goal: null, equipment: null, experience: null, duration: null,
   });
@@ -27,6 +28,17 @@ export default function App() {
   const [view, setView] = useState<View>('home');
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [summaryLog, setSummaryLog] = useState<WorkoutLog | null>(null);
+
+  // Migrate exercise library when defaults are updated
+  useEffect(() => {
+    if (seedVersion < EXERCISES_SEED_VERSION) {
+      setExercises(prev => {
+        const userAdded = prev.filter(e => !e.id.startsWith('default-'));
+        return [...defaultExercises, ...userAdded];
+      });
+      setSeedVersion(EXERCISES_SEED_VERSION);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Swipe-back support: listen for the browser's popstate event (iOS swipe-back
   // or Android back button) and return to the home screen.

@@ -158,6 +158,19 @@ export default function Session({ category, exercises, existingLog, onFinish, on
   };
 
   const getExercise = (id: string) => exercises.find((e) => e.id === id);
+
+  const getAlternatives = (we: WorkoutExercise) => {
+    const ex = getExercise(we.exerciseId);
+    if (!ex?.muscle) return [];
+    const inSession = new Set(workoutExercises.map((w) => w.exerciseId));
+    return exercises.filter((e) => e.muscle === ex.muscle && e.id !== ex.id && !inSession.has(e.id));
+  };
+
+  const handleSwap = (index: number, newExerciseId: string) => {
+    setWorkoutExercises((prev) =>
+      prev.map((wx, i) => (i === index ? { exerciseId: newExerciseId, done: false, sets: [] } : wx))
+    );
+  };
   const milestoneMsg = getMilestoneMsg(completed, total);
 
   return (
@@ -259,6 +272,8 @@ export default function Session({ category, exercises, existingLog, onFinish, on
               exercise={ex}
               workoutEx={we}
               onChange={(updated) => handleExerciseChange(i, updated)}
+              alternatives={getAlternatives(we)}
+              onSwap={(newId) => handleSwap(i, newId)}
             />
           );
         })}

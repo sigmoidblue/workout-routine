@@ -21,8 +21,12 @@ export function useExercisePicker(
 
   const picked = useMemo(() => {
     const pool = exercises.filter((e) => e.category === category);
-    const shuffled = shuffle(pool);
-    return shuffled.slice(0, Math.min(count, shuffled.length));
+    // Shuffle within each group first, then put compounds before isolations
+    const compounds = shuffle(pool.filter((e) => e.type === 'compound'));
+    const isolations = shuffle(pool.filter((e) => e.type === 'isolation'));
+    const untagged   = shuffle(pool.filter((e) => !e.type));
+    const ordered = [...compounds, ...isolations, ...untagged];
+    return ordered.slice(0, Math.min(count, ordered.length));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exercises, category, count, seed]);
 

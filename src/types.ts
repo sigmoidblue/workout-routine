@@ -14,6 +14,7 @@ export type Exercise = {
   category: Category;
   muscle?: string;
   tip?: string;
+  type?: 'compound' | 'isolation';
 };
 
 export type SetLog = {

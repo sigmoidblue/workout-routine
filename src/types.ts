@@ -25,6 +25,7 @@ export type WorkoutExercise = {
   exerciseId: string;
   done: boolean;
   sets?: SetLog[];
+  supersetGroup?: string;
 };
 
 export type WorkoutLog = {

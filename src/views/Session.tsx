@@ -3,6 +3,7 @@ import { Category, Exercise, WorkoutLog, WorkoutExercise } from '../types';
 import { useExercisePicker } from '../hooks/useExercisePicker';
 import ProgressRing from '../components/ProgressRing';
 import ExerciseItem from '../components/ExerciseItem';
+import SupersetCard from '../components/SupersetCard';
 import TimerSheet from '../components/TimerSheet';
 
 type Props = {
@@ -39,6 +40,27 @@ const todayStr = () => new Date().toISOString().slice(0, 10);
 
 function makeId() {
   return Math.random().toString(36).slice(2, 10);
+}
+
+function buildSupersets(wes: WorkoutExercise[], allExercises: Exercise[]): WorkoutExercise[] {
+  const getEx = (id: string) => allExercises.find((e) => e.id === id);
+  const pool = [...wes];
+  const result: WorkoutExercise[] = [];
+
+  while (pool.length >= 2) {
+    const first = pool.shift()!;
+    const firstEx = getEx(first.exerciseId);
+    // Prefer pairing with a different muscle group
+    let partnerIdx = pool.findIndex((p) => getEx(p.exerciseId)?.muscle !== firstEx?.muscle);
+    if (partnerIdx === -1) partnerIdx = 0;
+    const [partner] = pool.splice(partnerIdx, 1);
+    const groupId = makeId();
+    result.push({ ...first, supersetGroup: groupId });
+    result.push({ ...partner, supersetGroup: groupId });
+  }
+
+  if (pool.length === 1) result.push({ ...pool[0], supersetGroup: undefined });
+  return result;
 }
 
 function getMilestoneMsg(completed: number, total: number): string | null {
@@ -97,6 +119,7 @@ export default function Session({ category, exercises, existingLog, onFinish, on
   const [toast, setToast] = useState<{ msg: string; key: number } | null>(null);
   const [showTimer, setShowTimer] = useState(false);
   const [timerRunning, setTimerRunning] = useState(false);
+  const [ssEnabled, setSsEnabled] = useState(false);
   const handleTimerClose = useCallback(() => setShowTimer(false), []);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevCompleted = useRef(0);
@@ -173,8 +196,41 @@ export default function Session({ category, exercises, existingLog, onFinish, on
 
   const handleSwap = (index: number, newExerciseId: string) => {
     setWorkoutExercises((prev) =>
-      prev.map((wx, i) => (i === index ? { exerciseId: newExerciseId, done: false, sets: [] } : wx))
+      prev.map((wx, i) => (i === index ? { ...wx, exerciseId: newExerciseId, done: false, sets: [] } : wx))
     );
+  };
+
+  const toggleSS = () => {
+    if (!ssEnabled) {
+      setWorkoutExercises((prev) => buildSupersets(prev, exercises));
+    } else {
+      setWorkoutExercises((prev) => prev.map((we) => ({ ...we, supersetGroup: undefined })));
+    }
+    setSsEnabled((v) => !v);
+  };
+
+  const handleUnlink = (groupId: string) => {
+    setWorkoutExercises((prev) =>
+      prev.map((we) => we.supersetGroup === groupId ? { ...we, supersetGroup: undefined } : we)
+    );
+  };
+
+  const handleLink = (exerciseId: string, partnerId: string) => {
+    const groupId = makeId();
+    setWorkoutExercises((prev) =>
+      prev.map((we) =>
+        we.exerciseId === exerciseId || we.exerciseId === partnerId
+          ? { ...we, supersetGroup: groupId }
+          : we
+      )
+    );
+  };
+
+  const getLinkable = (exerciseId: string): Exercise[] => {
+    const unpairedIds = workoutExercises
+      .filter((we) => !we.supersetGroup && we.exerciseId !== exerciseId)
+      .map((we) => we.exerciseId);
+    return unpairedIds.map((id) => getExercise(id)!).filter(Boolean);
   };
   const milestoneMsg = getMilestoneMsg(completed, total);
 
@@ -263,25 +319,74 @@ export default function Session({ category, exercises, existingLog, onFinish, on
         </div>
       </div>
 
+      {/* Supersets toggle */}
+      {!existingLog && (
+        <div className="flex justify-center pb-4">
+          <button
+            onClick={toggleSS}
+            className={`flex items-center gap-2.5 px-4 py-1.5 rounded-full text-xs font-medium border transition-all ${
+              ssEnabled
+                ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
+                : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+            }`}
+          >
+            Supersets
+            <div className={`relative w-7 h-4 rounded-full transition-colors ${ssEnabled ? 'bg-indigo-500' : 'bg-slate-200'}`}>
+              <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-transform ${ssEnabled ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
+            </div>
+          </button>
+        </div>
+      )}
+
       {/* Divider */}
       <div className="h-px bg-slate-100 mx-5" />
 
       {/* Exercise List */}
       <div className="flex-1 px-5 pt-4 space-y-2.5 pb-36 overflow-y-auto">
-        {workoutExercises.map((we, i) => {
-          const ex = getExercise(we.exerciseId);
-          if (!ex) return null;
-          return (
-            <ExerciseItem
-              key={we.exerciseId}
-              exercise={ex}
-              workoutEx={we}
-              onChange={(updated) => handleExerciseChange(i, updated)}
-              alternatives={getAlternatives(we)}
-              onSwap={(newId) => handleSwap(i, newId)}
-            />
-          );
-        })}
+        {(() => {
+          const seen = new Set<string>();
+          return workoutExercises.map((we, i) => {
+            if (seen.has(we.exerciseId)) return null;
+            seen.add(we.exerciseId);
+            const ex = getExercise(we.exerciseId);
+            if (!ex) return null;
+
+            if (we.supersetGroup) {
+              const partnerIdx = workoutExercises.findIndex(
+                (w, j) => j !== i && w.supersetGroup === we.supersetGroup && !seen.has(w.exerciseId)
+              );
+              if (partnerIdx !== -1) {
+                const partnerWe = workoutExercises[partnerIdx];
+                const partnerEx = getExercise(partnerWe.exerciseId);
+                if (partnerEx) {
+                  seen.add(partnerWe.exerciseId);
+                  return (
+                    <SupersetCard
+                      key={we.supersetGroup}
+                      slotA={{ exercise: ex, workoutEx: we, onChange: (u) => handleExerciseChange(i, u), alternatives: getAlternatives(we), onSwap: (id) => handleSwap(i, id) }}
+                      slotB={{ exercise: partnerEx, workoutEx: partnerWe, onChange: (u) => handleExerciseChange(partnerIdx, u), alternatives: getAlternatives(partnerWe), onSwap: (id) => handleSwap(partnerIdx, id) }}
+                      onUnlink={() => handleUnlink(we.supersetGroup!)}
+                    />
+                  );
+                }
+              }
+            }
+
+            return (
+              <ExerciseItem
+                key={we.exerciseId}
+                exercise={ex}
+                workoutEx={we}
+                onChange={(updated) => handleExerciseChange(i, updated)}
+                alternatives={getAlternatives(we)}
+                onSwap={(newId) => handleSwap(i, newId)}
+                ssEnabled={ssEnabled}
+                linkable={ssEnabled ? getLinkable(we.exerciseId) : undefined}
+                onLink={(partnerId) => handleLink(we.exerciseId, partnerId)}
+              />
+            );
+          });
+        })()}
       </div>
 
       {/* Finish Button */}

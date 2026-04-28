@@ -92,6 +92,7 @@ export default function App() {
           category={activeCategory}
           exercises={exercises}
           existingLog={existingLog}
+          filters={filters}
           onFinish={handleFinish}
           onBack={goBack}
         />

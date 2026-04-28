@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Category, Exercise, WorkoutLog, WorkoutExercise } from '../types';
+import { Category, Exercise, WorkoutLog, WorkoutExercise, WorkoutFilters } from '../types';
 import { useExercisePicker } from '../hooks/useExercisePicker';
+import { defaultExercises } from '../data/defaultExercises';
+import { supersets } from '../data/supersetLibrary';
+import type { Goal, Equipment, Experience } from '../data/supersetLibrary';
+
+// Always use the bundled default data to determine barbell status — avoids
+// depending on the localStorage migration having already run.
+const barbellIds = new Set(defaultExercises.filter((e) => e.barbell).map((e) => e.id));
 import ProgressRing from '../components/ProgressRing';
 import ExerciseItem from '../components/ExerciseItem';
 import SupersetCard from '../components/SupersetCard';
@@ -10,6 +17,7 @@ type Props = {
   category: Category;
   exercises: Exercise[];
   existingLog?: WorkoutLog;
+  filters: WorkoutFilters;
   onFinish: (log: WorkoutLog) => void;
   onBack: () => void;
 };
@@ -42,24 +50,96 @@ function makeId() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-function buildSupersets(wes: WorkoutExercise[], allExercises: Exercise[]): WorkoutExercise[] {
-  const getEx = (id: string) => allExercises.find((e) => e.id === id);
-  const pool = [...wes];
-  const result: WorkoutExercise[] = [];
+function buildSupersets(
+  wes: WorkoutExercise[],
+  allExercises: Exercise[],
+  filters: WorkoutFilters,
+): WorkoutExercise[] {
+  // Determine which library buckets to draw from (union for null/unset filters)
+  const goals = (filters.goal
+    ? [filters.goal]
+    : ['strength', 'muscle', 'athletic']) as Goal[];
+  const equipments = (filters.equipment
+    ? [filters.equipment]
+    : ['gym', 'dumbbells', 'home']) as Equipment[];
+  const experiences = (filters.experience
+    ? [filters.experience]
+    : ['beginner', 'intermediate']) as Experience[];
 
-  while (pool.length >= 2) {
-    const first = pool.shift()!;
-    const firstEx = getEx(first.exerciseId);
-    // Prefer pairing with a different muscle group
-    let partnerIdx = pool.findIndex((p) => getEx(p.exerciseId)?.muscle !== firstEx?.muscle);
-    if (partnerIdx === -1) partnerIdx = 0;
-    const [partner] = pool.splice(partnerIdx, 1);
-    const groupId = makeId();
-    result.push({ ...first, supersetGroup: groupId });
-    result.push({ ...partner, supersetGroup: groupId });
+  // Collect deduplicated name-pairs from matching library buckets
+  const pairsSeen = new Set<string>();
+  const namePairs: [string, string][] = [];
+  for (const g of goals) {
+    for (const eq of equipments) {
+      for (const exp of experiences) {
+        for (const ss of supersets[g][eq][exp]) {
+          const key = [ss.exercises[0].name, ss.exercises[1].name]
+            .map((n) => n.toLowerCase())
+            .sort()
+            .join('||');
+          if (!pairsSeen.has(key)) {
+            pairsSeen.add(key);
+            namePairs.push([
+              ss.exercises[0].name.toLowerCase(),
+              ss.exercises[1].name.toLowerCase(),
+            ]);
+          }
+        }
+      }
+    }
   }
 
-  if (pool.length === 1) result.push({ ...pool[0], supersetGroup: undefined });
+  // Shuffle library pairs for variety each time
+  for (let i = namePairs.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [namePairs[i], namePairs[j]] = [namePairs[j], namePairs[i]];
+  }
+
+  // Build name → index lookup, skipping barbell exercises (they go in a separate section)
+  const nameToIdx = new Map<string, number>();
+  wes.forEach((we, i) => {
+    const ex = allExercises.find((e) => e.id === we.exerciseId);
+    if (ex && !barbellIds.has(we.exerciseId)) nameToIdx.set(ex.name.toLowerCase(), i);
+  });
+
+  // Apply library pairs first
+  const result: WorkoutExercise[] = wes.map((we) => ({ ...we, supersetGroup: undefined }));
+  const pairedIdxs = new Set<number>();
+
+  for (const [nA, nB] of namePairs) {
+    const idxA = nameToIdx.get(nA);
+    const idxB = nameToIdx.get(nB);
+    if (
+      idxA !== undefined && idxB !== undefined &&
+      !pairedIdxs.has(idxA) && !pairedIdxs.has(idxB)
+    ) {
+      const groupId = makeId();
+      result[idxA] = { ...result[idxA], supersetGroup: groupId };
+      result[idxB] = { ...result[idxB], supersetGroup: groupId };
+      pairedIdxs.add(idxA);
+      pairedIdxs.add(idxB);
+    }
+  }
+
+  // Fallback: randomly pair remaining unpaired non-barbell exercises (prefer different muscle)
+  const getEx = (id: string) => allExercises.find((e) => e.id === id);
+  const unpaired = result
+    .map((_, i) => i)
+    .filter((i) => !pairedIdxs.has(i) && !barbellIds.has(result[i].exerciseId));
+
+  while (unpaired.length >= 2) {
+    const firstIdx = unpaired.splice(0, 1)[0];
+    const firstEx = getEx(result[firstIdx].exerciseId);
+    let partnerPos = unpaired.findIndex(
+      (i) => getEx(result[i].exerciseId)?.muscle !== firstEx?.muscle
+    );
+    if (partnerPos === -1) partnerPos = 0;
+    const [partnerIdx] = unpaired.splice(partnerPos, 1);
+    const groupId = makeId();
+    result[firstIdx] = { ...result[firstIdx], supersetGroup: groupId };
+    result[partnerIdx] = { ...result[partnerIdx], supersetGroup: groupId };
+  }
+
   return result;
 }
 
@@ -109,10 +189,18 @@ function Confetti() {
   );
 }
 
-export default function Session({ category, exercises, existingLog, onFinish, onBack }: Props) {
-  const poolSize = exercises.filter((e) => e.category === category).length;
-  const [count, setCount] = useState(Math.min(7, poolSize));
-  const { picked, reroll } = useExercisePicker(exercises, category, count);
+export default function Session({ category, exercises, existingLog, filters, onFinish, onBack }: Props) {
+  const poolSize = exercises.filter((e) => {
+    if (e.category !== category) return false;
+    if (!filters.equipment) return true;
+    const req = e.equipment ?? 'gym';
+    if (filters.equipment === 'gym') return true;
+    if (filters.equipment === 'dumbbells') return req === 'dumbbells' || req === 'home';
+    return req === 'home';
+  }).length;
+  const [count, setCount] = useState(() => Math.min(7, poolSize));
+  useEffect(() => { setCount((c) => Math.min(c, poolSize)); }, [poolSize]);
+  const { picked, reroll } = useExercisePicker(exercises, category, count, filters.equipment);
   const [workoutExercises, setWorkoutExercises] = useState<WorkoutExercise[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [pulsing, setPulsing] = useState(false);
@@ -135,8 +223,11 @@ export default function Session({ category, exercises, existingLog, onFinish, on
       const newItems = picked
         .filter((ex) => !doneIds.has(ex.id))
         .map((ex) => ({ exerciseId: ex.id, done: false, sets: [] }));
-      return [...doneItems, ...newItems];
+      const combined = [...doneItems, ...newItems];
+      // Re-apply superset pairing if SS is currently enabled
+      return ssEnabled ? buildSupersets(combined, exercises, filters) : combined;
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [picked, existingLog]);
 
   const completed = workoutExercises.filter((e) => e.done).length;
@@ -184,14 +275,17 @@ export default function Session({ category, exercises, existingLog, onFinish, on
 
   const getAlternatives = (we: WorkoutExercise) => {
     const ex = getExercise(we.exerciseId);
-    if (!ex?.muscle) return [];
+    if (!ex) return [];
     const inSession = new Set(workoutExercises.map((w) => w.exerciseId));
+    if (barbellIds.has(we.exerciseId)) {
+      // Main lift: only offer other main lifts in the same category
+      return exercises.filter(
+        (e) => e.category === ex.category && e.id !== ex.id && !inSession.has(e.id) && barbellIds.has(e.id)
+      );
+    }
+    if (!ex.muscle) return [];
     const pool = exercises.filter((e) => e.category === ex.category && e.id !== ex.id && !inSession.has(e.id));
-    return pool.sort((a, b) => {
-      const aMatch = a.muscle === ex.muscle ? 0 : 1;
-      const bMatch = b.muscle === ex.muscle ? 0 : 1;
-      return aMatch - bMatch;
-    });
+    return pool.sort((a, b) => (a.muscle === ex.muscle ? 0 : 1) - (b.muscle === ex.muscle ? 0 : 1));
   };
 
   const handleSwap = (index: number, newExerciseId: string) => {
@@ -202,7 +296,7 @@ export default function Session({ category, exercises, existingLog, onFinish, on
 
   const toggleSS = () => {
     if (!ssEnabled) {
-      setWorkoutExercises((prev) => buildSupersets(prev, exercises));
+      setWorkoutExercises((prev) => buildSupersets(prev, exercises, filters));
     } else {
       setWorkoutExercises((prev) => prev.map((we) => ({ ...we, supersetGroup: undefined })));
     }
@@ -342,10 +436,47 @@ export default function Session({ category, exercises, existingLog, onFinish, on
       <div className="h-px bg-slate-100 mx-5" />
 
       {/* Exercise List */}
-      <div className="flex-1 px-5 pt-4 space-y-2.5 pb-36 overflow-y-auto">
+      <div className="flex-1 px-5 pt-4 pb-36 overflow-y-auto">
+        {/* Primary / main lift section */}
         {(() => {
+          const primaryIdx = workoutExercises.findIndex((we) => barbellIds.has(we.exerciseId));
+          if (primaryIdx === -1) return null;
+          const we = workoutExercises[primaryIdx];
+          const ex = getExercise(we.exerciseId)!;
+          return (
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2.5">
+                <svg className="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="6" y1="12" x2="18" y2="12" />
+                  <circle cx="3" cy="12" r="2" />
+                  <circle cx="21" cy="12" r="2" />
+                  <line x1="3" y1="8" x2="3" y2="16" />
+                  <line x1="21" y1="8" x2="21" y2="16" />
+                </svg>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Main Lift</span>
+              </div>
+              <ExerciseItem
+                exercise={ex}
+                workoutEx={we}
+                onChange={(u) => handleExerciseChange(primaryIdx, u)}
+                alternatives={getAlternatives(we)}
+                onSwap={(id) => handleSwap(primaryIdx, id)}
+              />
+              <div className="flex items-center gap-3 mt-4 mb-1">
+                <div className="flex-1 h-px bg-slate-100" />
+                <span className="text-[10px] font-semibold text-slate-300 uppercase tracking-widest">Work Sets</span>
+                <div className="flex-1 h-px bg-slate-100" />
+              </div>
+            </div>
+          );
+        })()}
+
+        <div className="space-y-2.5">
+        {(() => {
+          const primaryIdx = workoutExercises.findIndex((we) => barbellIds.has(we.exerciseId));
           const seen = new Set<string>();
           return workoutExercises.map((we, i) => {
+            if (i === primaryIdx) return null;
             if (seen.has(we.exerciseId)) return null;
             seen.add(we.exerciseId);
             const ex = getExercise(we.exerciseId);
@@ -387,6 +518,7 @@ export default function Session({ category, exercises, existingLog, onFinish, on
             );
           });
         })()}
+        </div>
       </div>
 
       {/* Finish Button */}

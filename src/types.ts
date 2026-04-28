@@ -15,6 +15,8 @@ export type Exercise = {
   muscle?: string;
   tip?: string;
   type?: 'compound' | 'isolation';
+  barbell?: boolean;
+  equipment?: WorkoutEquipment;
 };
 
 export type SetLog = {

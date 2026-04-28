@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Exercise, Category } from '../types';
+import { Exercise, Category, WorkoutEquipment } from '../types';
 
 const DEFAULT_COUNT = 7;
 
@@ -12,15 +12,27 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+function matchesEquipment(ex: Exercise, equipment: WorkoutEquipment | null): boolean {
+  if (!equipment) return true;
+  const req = ex.equipment ?? 'gym'; // untagged defaults to gym-only
+  if (equipment === 'gym') return true;
+  if (equipment === 'dumbbells') return req === 'dumbbells' || req === 'home';
+  if (equipment === 'home') return req === 'home';
+  return true;
+}
+
 export function useExercisePicker(
   exercises: Exercise[],
   category: Category,
-  count = DEFAULT_COUNT
+  count = DEFAULT_COUNT,
+  equipment: WorkoutEquipment | null = null,
 ) {
   const [seed, setSeed] = useState(0);
 
   const picked = useMemo(() => {
-    const pool = exercises.filter((e) => e.category === category);
+    const pool = exercises.filter(
+      (e) => e.category === category && matchesEquipment(e, equipment)
+    );
     // Shuffle within each group first, then put compounds before isolations
     const compounds = shuffle(pool.filter((e) => e.type === 'compound'));
     const isolations = shuffle(pool.filter((e) => e.type === 'isolation'));
@@ -28,7 +40,7 @@ export function useExercisePicker(
     const ordered = [...compounds, ...isolations, ...untagged];
     return ordered.slice(0, Math.min(count, ordered.length));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exercises, category, count, seed]);
+  }, [exercises, category, count, equipment, seed]);
 
   const reroll = () => setSeed((s) => s + 1);
 

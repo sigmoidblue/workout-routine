@@ -4,6 +4,7 @@ import { useExercisePicker } from '../hooks/useExercisePicker';
 import { defaultExercises } from '../data/defaultExercises';
 import { supersets } from '../data/supersetLibrary';
 import type { Goal, Equipment, Experience } from '../data/supersetLibrary';
+import { warmupCooldown, phaseExerciseMap } from '../data/warmupCooldown';
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
   DragOverlay,
@@ -106,7 +107,7 @@ function buildSupersets(
   const nameToIdx = new Map<string, number>();
   wes.forEach((we, i) => {
     const ex = allExercises.find((e) => e.id === we.exerciseId);
-    if (ex && !barbellIds.has(we.exerciseId)) nameToIdx.set(ex.name.toLowerCase(), i);
+    if (ex && !barbellIds.has(we.exerciseId) && !we.phase) nameToIdx.set(ex.name.toLowerCase(), i);
   });
 
   // Apply library pairs first
@@ -132,7 +133,7 @@ function buildSupersets(
   const getEx = (id: string) => allExercises.find((e) => e.id === id);
   const unpaired = result
     .map((_, i) => i)
-    .filter((i) => !pairedIdxs.has(i) && !barbellIds.has(result[i].exerciseId));
+    .filter((i) => !pairedIdxs.has(i) && !barbellIds.has(result[i].exerciseId) && !result[i].phase);
 
   while (unpaired.length >= 2) {
     const firstIdx = unpaired.splice(0, 1)[0];
@@ -158,6 +159,7 @@ function computeDisplayItems(wes: WorkoutExercise[], primaryIdx: number): Displa
   const seen = new Set<string>();
   const items: DisplayItem[] = [];
   wes.forEach((we, i) => {
+    if (we.phase) return;
     if (i === primaryIdx) return;
     if (seen.has(we.exerciseId)) return;
     seen.add(we.exerciseId);
@@ -256,6 +258,7 @@ export default function Session({ category, exercises, existingLog, filters, onF
   const [showTimer, setShowTimer] = useState(false);
   const [timerRunning, setTimerRunning] = useState(false);
   const [ssEnabled, setSsEnabled] = useState(false);
+  const [wucdEnabled, setWucdEnabled] = useState(false);
   const handleTimerClose = useCallback(() => setShowTimer(false), []);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevCompleted = useRef(0);
@@ -266,12 +269,15 @@ export default function Session({ category, exercises, existingLog, filters, onF
       return;
     }
     setWorkoutExercises((current) => {
-      const doneItems = current.filter((e) => e.done);
+      const warmupItems = current.filter((e) => e.phase === 'warmup');
+      const cooldownItems = current.filter((e) => e.phase === 'cooldown');
+      const doneItems = current.filter((e) => e.done && !e.phase);
       const doneIds = new Set(doneItems.map((e) => e.exerciseId));
       const newItems = picked
         .filter((ex) => !doneIds.has(ex.id))
         .map((ex) => ({ exerciseId: ex.id, done: false, sets: [] }));
-      const combined = [...doneItems, ...newItems];
+      const mainItems = [...doneItems, ...newItems];
+      const combined = [...warmupItems, ...mainItems, ...cooldownItems];
       // Re-apply superset pairing if SS is currently enabled
       return ssEnabled ? buildSupersets(combined, exercises, filters) : combined;
     });
@@ -319,7 +325,23 @@ export default function Session({ category, exercises, existingLog, filters, onF
     }, 2400);
   };
 
-  const getExercise = (id: string) => exercises.find((e) => e.id === id);
+  const getExercise = (id: string) =>
+    exercises.find((e) => e.id === id) ?? phaseExerciseMap.get(id);
+
+  const toggleWUCD = () => {
+    if (!wucdEnabled) {
+      const wuItems = warmupCooldown[category].warmup.map((ex) => ({
+        exerciseId: ex.id, done: false, phase: 'warmup' as const,
+      }));
+      const cdItems = warmupCooldown[category].cooldown.map((ex) => ({
+        exerciseId: ex.id, done: false, phase: 'cooldown' as const,
+      }));
+      setWorkoutExercises((prev) => [...wuItems, ...prev, ...cdItems]);
+    } else {
+      setWorkoutExercises((prev) => prev.filter((we) => !we.phase));
+    }
+    setWucdEnabled((v) => !v);
+  };
 
   const getAlternatives = (we: WorkoutExercise) => {
     const ex = getExercise(we.exerciseId);
@@ -492,22 +514,29 @@ export default function Session({ category, exercises, existingLog, filters, onF
         </div>
       </div>
 
-      {/* Supersets toggle */}
+      {/* Toggles */}
       {!existingLog && (
-        <div className="flex justify-center pb-4">
-          <button
-            onClick={toggleSS}
-            className={`flex items-center gap-2.5 px-4 py-1.5 rounded-full text-xs font-medium border transition-all ${
-              ssEnabled
-                ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
-                : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
-            }`}
-          >
-            Supersets
-            <div className={`relative w-7 h-4 rounded-full transition-colors ${ssEnabled ? 'bg-indigo-500' : 'bg-slate-200'}`}>
-              <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-transform ${ssEnabled ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
-            </div>
-          </button>
+        <div className="flex justify-center gap-2.5 pb-4 flex-wrap px-5">
+          {(['Warm-up & Cool-down', 'Supersets'] as const).map((label) => {
+            const active = label === 'Supersets' ? ssEnabled : wucdEnabled;
+            const onToggle = label === 'Supersets' ? toggleSS : toggleWUCD;
+            return (
+              <button
+                key={label}
+                onClick={onToggle}
+                className={`flex items-center gap-2.5 px-4 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                  active
+                    ? 'bg-indigo-50 border-indigo-200 text-indigo-600'
+                    : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                }`}
+              >
+                {label}
+                <div className={`relative w-7 h-4 rounded-full transition-colors ${active ? 'bg-indigo-500' : 'bg-slate-200'}`}>
+                  <div className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow-sm transition-transform ${active ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -516,6 +545,41 @@ export default function Session({ category, exercises, existingLog, filters, onF
 
       {/* Exercise List */}
       <div className="flex-1 px-5 pt-4 pb-36 overflow-y-auto">
+
+        {/* Warm-up section */}
+        {wucdEnabled && (() => {
+          const items = workoutExercises.map((we, i) => ({ we, i })).filter(({ we }) => we.phase === 'warmup');
+          if (!items.length) return null;
+          return (
+            <div className="mb-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex-1 h-px bg-slate-100" />
+                <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-widest">Warm-up</span>
+                <div className="flex-1 h-px bg-slate-100" />
+              </div>
+              <div className="space-y-2.5">
+                {items.map(({ we, i }) => {
+                  const ex = getExercise(we.exerciseId);
+                  if (!ex) return null;
+                  return (
+                    <ExerciseItem
+                      key={we.exerciseId}
+                      exercise={ex}
+                      workoutEx={we}
+                      onChange={(u) => handleExerciseChange(i, u)}
+                    />
+                  );
+                })}
+              </div>
+              <div className="flex items-center gap-3 mt-4 mb-1">
+                <div className="flex-1 h-px bg-slate-100" />
+                <span className="text-[10px] font-semibold text-slate-300 uppercase tracking-widest">Workout</span>
+                <div className="flex-1 h-px bg-slate-100" />
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Primary / main lift section */}
         {(() => {
           const primaryIdx = workoutExercises.findIndex((we) => barbellIds.has(we.exerciseId));
@@ -630,6 +694,35 @@ export default function Session({ category, exercises, existingLog, filters, onF
             })()}
           </DragOverlay>
         </DndContext>
+
+        {/* Cool-down section */}
+        {wucdEnabled && (() => {
+          const items = workoutExercises.map((we, i) => ({ we, i })).filter(({ we }) => we.phase === 'cooldown');
+          if (!items.length) return null;
+          return (
+            <div className="mt-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex-1 h-px bg-slate-100" />
+                <span className="text-[10px] font-semibold text-sky-400 uppercase tracking-widest">Cool-down</span>
+                <div className="flex-1 h-px bg-slate-100" />
+              </div>
+              <div className="space-y-2.5">
+                {items.map(({ we, i }) => {
+                  const ex = getExercise(we.exerciseId);
+                  if (!ex) return null;
+                  return (
+                    <ExerciseItem
+                      key={we.exerciseId}
+                      exercise={ex}
+                      workoutEx={we}
+                      onChange={(u) => handleExerciseChange(i, u)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Finish Button */}

@@ -24,11 +24,14 @@ export type SetLog = {
   weight?: number;
 };
 
+export type WorkoutPhase = 'warmup' | 'cooldown';
+
 export type WorkoutExercise = {
   exerciseId: string;
   done: boolean;
   sets?: SetLog[];
   supersetGroup?: string;
+  phase?: WorkoutPhase;
 };
 
 export type WorkoutLog = {

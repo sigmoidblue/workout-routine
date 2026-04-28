@@ -1,3 +1,4 @@
+import React from 'react';
 import { Exercise, WorkoutExercise } from '../types';
 import ExerciseItem from './ExerciseItem';
 
@@ -13,9 +14,10 @@ type Props = {
   slotA: Slot;
   slotB: Slot;
   onUnlink: () => void;
+  dragHandleProps?: React.HTMLAttributes<HTMLDivElement>;
 };
 
-export default function SupersetCard({ slotA, slotB, onUnlink }: Props) {
+export default function SupersetCard({ slotA, slotB, onUnlink, dragHandleProps }: Props) {
   return (
     <div className="rounded-2xl border border-indigo-100 shadow-sm overflow-hidden">
       {/* Header */}
@@ -27,6 +29,18 @@ export default function SupersetCard({ slotA, slotB, onUnlink }: Props) {
           </div>
           <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Superset</span>
         </div>
+        {dragHandleProps && (
+          <div
+            {...dragHandleProps}
+            className="flex items-center justify-center w-6 h-6 text-indigo-300 cursor-grab active:cursor-grabbing touch-none select-none"
+          >
+            <svg width="8" height="14" viewBox="0 0 8 14" fill="currentColor">
+              <circle cx="2" cy="2" r="1.3" /><circle cx="6" cy="2" r="1.3" />
+              <circle cx="2" cy="7" r="1.3" /><circle cx="6" cy="7" r="1.3" />
+              <circle cx="2" cy="12" r="1.3" /><circle cx="6" cy="12" r="1.3" />
+            </svg>
+          </div>
+        )}
         <button
           onClick={onUnlink}
           className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 transition-colors"

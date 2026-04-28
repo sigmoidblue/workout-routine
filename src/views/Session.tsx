@@ -6,8 +6,9 @@ import { supersets } from '../data/supersetLibrary';
 import type { Goal, Equipment, Experience } from '../data/supersetLibrary';
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors,
+  DragOverlay,
 } from '@dnd-kit/core';
-import type { DragEndEvent } from '@dnd-kit/core';
+import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -175,16 +176,17 @@ function computeDisplayItems(wes: WorkoutExercise[], primaryIdx: number): Displa
   return items;
 }
 
-function SortableItem({ id, children }: { id: string; children: React.ReactNode }) {
+function SortableItem({ id, children }: {
+  id: string;
+  children: (handleProps: React.HTMLAttributes<HTMLDivElement>) => React.ReactNode;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   return (
     <div
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
-      {...attributes}
-      {...listeners}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0 : 1 }}
     >
-      {children}
+      {children({ ...attributes, ...listeners } as React.HTMLAttributes<HTMLDivElement>)}
     </div>
   );
 }
@@ -373,12 +375,18 @@ export default function Session({ category, exercises, existingLog, filters, onF
     return unpairedIds.map((id) => getExercise(id)!).filter(Boolean);
   };
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { delay: 300, tolerance: 5 } }));
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
   const primaryIdx = workoutExercises.findIndex((we) => barbellIds.has(we.exerciseId));
   const displayItems = computeDisplayItems(workoutExercises, primaryIdx);
 
+  const handleDragStart = ({ active }: DragStartEvent) => {
+    setActiveDragId(active.id as string);
+  };
+
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    setActiveDragId(null);
     if (!over || active.id === over.id) return;
     setWorkoutExercises((prev) => {
       const pIdx = prev.findIndex((we) => barbellIds.has(we.exerciseId));
@@ -542,7 +550,7 @@ export default function Session({ category, exercises, existingLog, filters, onF
           );
         })()}
 
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <SortableContext items={displayItems.map((item) => item.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-2.5">
               {displayItems.map((item) => {
@@ -554,11 +562,14 @@ export default function Session({ category, exercises, existingLog, filters, onF
                   if (!ex || !partnerEx) return null;
                   return (
                     <SortableItem key={item.id} id={item.id}>
-                      <SupersetCard
-                        slotA={{ exercise: ex, workoutEx: we, onChange: (u) => handleExerciseChange(item.idxA, u), alternatives: getAlternatives(we), onSwap: (id) => handleSwap(item.idxA, id) }}
-                        slotB={{ exercise: partnerEx, workoutEx: partnerWe, onChange: (u) => handleExerciseChange(item.idxB, u), alternatives: getAlternatives(partnerWe), onSwap: (id) => handleSwap(item.idxB, id) }}
-                        onUnlink={() => handleUnlink(we.supersetGroup!)}
-                      />
+                      {(hp) => (
+                        <SupersetCard
+                          slotA={{ exercise: ex, workoutEx: we, onChange: (u) => handleExerciseChange(item.idxA, u), alternatives: getAlternatives(we), onSwap: (id) => handleSwap(item.idxA, id) }}
+                          slotB={{ exercise: partnerEx, workoutEx: partnerWe, onChange: (u) => handleExerciseChange(item.idxB, u), alternatives: getAlternatives(partnerWe), onSwap: (id) => handleSwap(item.idxB, id) }}
+                          onUnlink={() => handleUnlink(we.supersetGroup!)}
+                          dragHandleProps={!existingLog ? hp : undefined}
+                        />
+                      )}
                     </SortableItem>
                   );
                 }
@@ -567,21 +578,57 @@ export default function Session({ category, exercises, existingLog, filters, onF
                 if (!ex) return null;
                 return (
                   <SortableItem key={item.id} id={item.id}>
-                    <ExerciseItem
-                      exercise={ex}
-                      workoutEx={we}
-                      onChange={(u) => handleExerciseChange(item.idx, u)}
-                      alternatives={getAlternatives(we)}
-                      onSwap={(newId) => handleSwap(item.idx, newId)}
-                      ssEnabled={ssEnabled}
-                      linkable={ssEnabled ? getLinkable(we.exerciseId) : undefined}
-                      onLink={(partnerId) => handleLink(we.exerciseId, partnerId)}
-                    />
+                    {(hp) => (
+                      <ExerciseItem
+                        exercise={ex}
+                        workoutEx={we}
+                        onChange={(u) => handleExerciseChange(item.idx, u)}
+                        alternatives={getAlternatives(we)}
+                        onSwap={(newId) => handleSwap(item.idx, newId)}
+                        ssEnabled={ssEnabled}
+                        linkable={ssEnabled ? getLinkable(we.exerciseId) : undefined}
+                        onLink={(partnerId) => handleLink(we.exerciseId, partnerId)}
+                        dragHandleProps={!existingLog ? hp : undefined}
+                      />
+                    )}
                   </SortableItem>
                 );
               })}
             </div>
           </SortableContext>
+          <DragOverlay>
+            {(() => {
+              if (!activeDragId) return null;
+              const item = displayItems.find((d) => d.id === activeDragId);
+              if (!item) return null;
+              if (item.kind === 'superset') {
+                const we = workoutExercises[item.idxA];
+                const partnerWe = workoutExercises[item.idxB];
+                const ex = getExercise(we.exerciseId);
+                const partnerEx = getExercise(partnerWe.exerciseId);
+                if (!ex || !partnerEx) return null;
+                return (
+                  <SupersetCard
+                    slotA={{ exercise: ex, workoutEx: we, onChange: () => {}, alternatives: [], onSwap: () => {} }}
+                    slotB={{ exercise: partnerEx, workoutEx: partnerWe, onChange: () => {}, alternatives: [], onSwap: () => {} }}
+                    onUnlink={() => {}}
+                  />
+                );
+              }
+              const we = workoutExercises[item.idx];
+              const ex = getExercise(we.exerciseId);
+              if (!ex) return null;
+              return (
+                <ExerciseItem
+                  exercise={ex}
+                  workoutEx={we}
+                  onChange={() => {}}
+                  onSwap={() => {}}
+                  dragHandleProps={{}}
+                />
+              );
+            })()}
+          </DragOverlay>
         </DndContext>
       </div>
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { WorkoutExercise, Exercise, SetLog } from '../types';
 
 type Props = {
@@ -12,12 +12,14 @@ type Props = {
   ssEnabled?: boolean;      // show link button on unpaired exercises
   linkable?: Exercise[];    // other unpaired exercises available to pair with
   onLink?: (partnerId: string) => void;
+  dragHandleProps?: React.HTMLAttributes<HTMLDivElement>;
 };
 
 export default function ExerciseItem({
   exercise, workoutEx, onChange,
   alternatives, onSwap,
   bare, ssEnabled, linkable, onLink,
+  dragHandleProps,
 }: Props) {
   const [showLog, setShowLog] = useState(false);
   const [showSwap, setShowSwap] = useState(false);
@@ -102,6 +104,21 @@ export default function ExerciseItem({
           >
             {showLog ? 'hide' : 'log'}
           </button>
+
+          {/* Drag handle */}
+          {dragHandleProps && (
+            <div
+              {...dragHandleProps}
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center justify-center w-6 h-6 text-slate-300 cursor-grab active:cursor-grabbing touch-none select-none"
+            >
+              <svg width="8" height="14" viewBox="0 0 8 14" fill="currentColor">
+                <circle cx="2" cy="2" r="1.3" /><circle cx="6" cy="2" r="1.3" />
+                <circle cx="2" cy="7" r="1.3" /><circle cx="6" cy="7" r="1.3" />
+                <circle cx="2" cy="12" r="1.3" /><circle cx="6" cy="12" r="1.3" />
+              </svg>
+            </div>
+          )}
         </div>
       </div>
 

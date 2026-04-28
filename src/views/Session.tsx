@@ -1,9 +1,15 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Category, Exercise, WorkoutLog, WorkoutExercise, WorkoutFilters } from '../types';
 import { useExercisePicker } from '../hooks/useExercisePicker';
 import { defaultExercises } from '../data/defaultExercises';
 import { supersets } from '../data/supersetLibrary';
 import type { Goal, Equipment, Experience } from '../data/supersetLibrary';
+import {
+  DndContext, closestCenter, PointerSensor, useSensor, useSensors,
+} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // Always use the bundled default data to determine barbell status — avoids
 // depending on the localStorage migration having already run.
@@ -141,6 +147,46 @@ function buildSupersets(
   }
 
   return result;
+}
+
+type DisplayItem =
+  | { kind: 'single'; id: string; idx: number }
+  | { kind: 'superset'; id: string; idxA: number; idxB: number };
+
+function computeDisplayItems(wes: WorkoutExercise[], primaryIdx: number): DisplayItem[] {
+  const seen = new Set<string>();
+  const items: DisplayItem[] = [];
+  wes.forEach((we, i) => {
+    if (i === primaryIdx) return;
+    if (seen.has(we.exerciseId)) return;
+    seen.add(we.exerciseId);
+    if (we.supersetGroup) {
+      const partnerIdx = wes.findIndex(
+        (w, j) => j !== i && w.supersetGroup === we.supersetGroup && !seen.has(w.exerciseId)
+      );
+      if (partnerIdx !== -1) {
+        seen.add(wes[partnerIdx].exerciseId);
+        items.push({ kind: 'superset', id: we.supersetGroup, idxA: i, idxB: partnerIdx });
+        return;
+      }
+    }
+    items.push({ kind: 'single', id: we.exerciseId, idx: i });
+  });
+  return items;
+}
+
+function SortableItem({ id, children }: { id: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
+      {...attributes}
+      {...listeners}
+    >
+      {children}
+    </div>
+  );
 }
 
 function getMilestoneMsg(completed: number, total: number): string | null {
@@ -326,6 +372,31 @@ export default function Session({ category, exercises, existingLog, filters, onF
       .map((we) => we.exerciseId);
     return unpairedIds.map((id) => getExercise(id)!).filter(Boolean);
   };
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { delay: 300, tolerance: 5 } }));
+
+  const primaryIdx = workoutExercises.findIndex((we) => barbellIds.has(we.exerciseId));
+  const displayItems = computeDisplayItems(workoutExercises, primaryIdx);
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    setWorkoutExercises((prev) => {
+      const pIdx = prev.findIndex((we) => barbellIds.has(we.exerciseId));
+      const items = computeDisplayItems(prev, pIdx);
+      const oldPos = items.findIndex((item) => item.id === active.id);
+      const newPos = items.findIndex((item) => item.id === over.id);
+      if (oldPos === -1 || newPos === -1) return prev;
+      const reordered = arrayMove(items, oldPos, newPos);
+      const result: WorkoutExercise[] = [];
+      if (pIdx !== -1) result.push(prev[pIdx]);
+      for (const item of reordered) {
+        if (item.kind === 'single') result.push(prev[item.idx]);
+        else { result.push(prev[item.idxA]); result.push(prev[item.idxB]); }
+      }
+      return result;
+    });
+  };
+
   const milestoneMsg = getMilestoneMsg(completed, total);
 
   return (
@@ -471,54 +542,47 @@ export default function Session({ category, exercises, existingLog, filters, onF
           );
         })()}
 
-        <div className="space-y-2.5">
-        {(() => {
-          const primaryIdx = workoutExercises.findIndex((we) => barbellIds.has(we.exerciseId));
-          const seen = new Set<string>();
-          return workoutExercises.map((we, i) => {
-            if (i === primaryIdx) return null;
-            if (seen.has(we.exerciseId)) return null;
-            seen.add(we.exerciseId);
-            const ex = getExercise(we.exerciseId);
-            if (!ex) return null;
-
-            if (we.supersetGroup) {
-              const partnerIdx = workoutExercises.findIndex(
-                (w, j) => j !== i && w.supersetGroup === we.supersetGroup && !seen.has(w.exerciseId)
-              );
-              if (partnerIdx !== -1) {
-                const partnerWe = workoutExercises[partnerIdx];
-                const partnerEx = getExercise(partnerWe.exerciseId);
-                if (partnerEx) {
-                  seen.add(partnerWe.exerciseId);
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={displayItems.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2.5">
+              {displayItems.map((item) => {
+                if (item.kind === 'superset') {
+                  const we = workoutExercises[item.idxA];
+                  const partnerWe = workoutExercises[item.idxB];
+                  const ex = getExercise(we.exerciseId);
+                  const partnerEx = getExercise(partnerWe.exerciseId);
+                  if (!ex || !partnerEx) return null;
                   return (
-                    <SupersetCard
-                      key={we.supersetGroup}
-                      slotA={{ exercise: ex, workoutEx: we, onChange: (u) => handleExerciseChange(i, u), alternatives: getAlternatives(we), onSwap: (id) => handleSwap(i, id) }}
-                      slotB={{ exercise: partnerEx, workoutEx: partnerWe, onChange: (u) => handleExerciseChange(partnerIdx, u), alternatives: getAlternatives(partnerWe), onSwap: (id) => handleSwap(partnerIdx, id) }}
-                      onUnlink={() => handleUnlink(we.supersetGroup!)}
-                    />
+                    <SortableItem key={item.id} id={item.id}>
+                      <SupersetCard
+                        slotA={{ exercise: ex, workoutEx: we, onChange: (u) => handleExerciseChange(item.idxA, u), alternatives: getAlternatives(we), onSwap: (id) => handleSwap(item.idxA, id) }}
+                        slotB={{ exercise: partnerEx, workoutEx: partnerWe, onChange: (u) => handleExerciseChange(item.idxB, u), alternatives: getAlternatives(partnerWe), onSwap: (id) => handleSwap(item.idxB, id) }}
+                        onUnlink={() => handleUnlink(we.supersetGroup!)}
+                      />
+                    </SortableItem>
                   );
                 }
-              }
-            }
-
-            return (
-              <ExerciseItem
-                key={we.exerciseId}
-                exercise={ex}
-                workoutEx={we}
-                onChange={(updated) => handleExerciseChange(i, updated)}
-                alternatives={getAlternatives(we)}
-                onSwap={(newId) => handleSwap(i, newId)}
-                ssEnabled={ssEnabled}
-                linkable={ssEnabled ? getLinkable(we.exerciseId) : undefined}
-                onLink={(partnerId) => handleLink(we.exerciseId, partnerId)}
-              />
-            );
-          });
-        })()}
-        </div>
+                const we = workoutExercises[item.idx];
+                const ex = getExercise(we.exerciseId);
+                if (!ex) return null;
+                return (
+                  <SortableItem key={item.id} id={item.id}>
+                    <ExerciseItem
+                      exercise={ex}
+                      workoutEx={we}
+                      onChange={(u) => handleExerciseChange(item.idx, u)}
+                      alternatives={getAlternatives(we)}
+                      onSwap={(newId) => handleSwap(item.idx, newId)}
+                      ssEnabled={ssEnabled}
+                      linkable={ssEnabled ? getLinkable(we.exerciseId) : undefined}
+                      onLink={(partnerId) => handleLink(we.exerciseId, partnerId)}
+                    />
+                  </SortableItem>
+                );
+              })}
+            </div>
+          </SortableContext>
+        </DndContext>
       </div>
 
       {/* Finish Button */}

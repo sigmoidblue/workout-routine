@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Category, WorkoutLog, WorkoutFilters, WorkoutGoal, WorkoutEquipment, WorkoutExperience, WorkoutDuration } from '../types';
+import { Category, WorkoutLog, WorkoutFilters, WorkoutGoal, WorkoutEquipment, WorkoutDuration } from '../types';
 import CategoryCard from '../components/CategoryCard';
 import StreakBadge from '../components/StreakBadge';
 import { useStreak } from '../hooks/useStreak';
@@ -61,7 +61,7 @@ export default function Home({ onStart, onLibrary, workouts, filters, onFiltersC
   const hasActiveFilters =
     filters.goal !== null ||
     filters.equipment !== null ||
-    filters.experience !== null ||
+    // filters.experience !== null ||
     filters.duration !== null;
 
   return (
@@ -132,6 +132,7 @@ export default function Home({ onStart, onLibrary, workouts, filters, onFiltersC
               value={filters.equipment}
               onSelect={(v) => onFiltersChange({ ...filters, equipment: v })}
             />
+            {/* Experience filter — hidden until exercises are tagged
             <FilterPills<WorkoutExperience>
               label="Experience"
               options={[
@@ -140,7 +141,7 @@ export default function Home({ onStart, onLibrary, workouts, filters, onFiltersC
               ]}
               value={filters.experience}
               onSelect={(v) => onFiltersChange({ ...filters, experience: v })}
-            />
+            /> */}
             <FilterPills<WorkoutDuration>
               label="Duration"
               options={[

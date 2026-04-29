@@ -248,8 +248,9 @@ export default function Session({ category, exercises, existingLog, filters, onF
     if (filters.equipment === 'dumbbells') return req === 'dumbbells' || req === 'home';
     return req === 'home';
   }).length;
-  const [count, setCount] = useState(() => Math.min(7, poolSize));
-  useEffect(() => { setCount((c) => Math.min(c, poolSize)); }, [poolSize]);
+  const defaultCount = filters.duration === 30 ? 5 : filters.duration === 45 ? 6 : filters.duration === 60 ? 8 : 7;
+  const [count, setCount] = useState(() => Math.min(defaultCount, poolSize));
+  useEffect(() => { setCount(Math.min(defaultCount, poolSize)); }, [defaultCount, poolSize]);
   const { picked, reroll } = useExercisePicker(exercises, category, count, filters.equipment);
   const [workoutExercises, setWorkoutExercises] = useState<WorkoutExercise[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);

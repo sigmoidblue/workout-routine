@@ -7,6 +7,7 @@ import Home from './views/Home';
 import Session from './views/Session';
 import Summary from './views/Summary';
 import Library from './views/Library';
+import Progress from './views/Progress';
 
 function makeId() {
   return Math.random().toString(36).slice(2, 10);
@@ -77,6 +78,13 @@ export default function App() {
     history.replaceState(null, '');
   };
 
+  const handleSave = (log: WorkoutLog) => {
+    setWorkouts((prev) => {
+      const others = prev.filter((w) => w.id !== log.id);
+      return [...others, log];
+    });
+  };
+
   const handleAddExercise = (ex: Omit<Exercise, 'id'>) => {
     setExercises((prev) => [...prev, { ...ex, id: makeId() }]);
   };
@@ -94,6 +102,7 @@ export default function App() {
           existingLog={existingLog}
           filters={filters}
           onFinish={handleFinish}
+          onSave={existingLog ? handleSave : undefined}
           onBack={goBack}
         />
       </div>
@@ -126,12 +135,28 @@ export default function App() {
     );
   }
 
+  if (view === 'progress') {
+    return (
+      <div className="max-w-md mx-auto">
+        <Progress
+          workouts={workouts}
+          exercises={exercises}
+          onBack={goBack}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-md mx-auto">
       <Home
         onStart={handleStart}
         onLibrary={() => {
           setView('library');
+          history.pushState(null, '');
+        }}
+        onProgress={() => {
+          setView('progress');
           history.pushState(null, '');
         }}
         workouts={workouts}

@@ -48,7 +48,7 @@ export type StreakData = {
   longest: number;
 };
 
-export type View = 'home' | 'session' | 'library' | 'summary';
+export type View = 'home' | 'session' | 'library' | 'summary' | 'progress';
 
 export type WorkoutGoal = 'strength' | 'muscle' | 'athletic';
 export type WorkoutEquipment = 'gym' | 'dumbbells' | 'home';

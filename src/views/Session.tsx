@@ -27,6 +27,7 @@ type Props = {
   existingLog?: WorkoutLog;
   filters: WorkoutFilters;
   onFinish: (log: WorkoutLog) => void;
+  onSave?: (log: WorkoutLog) => void;
   onBack: () => void;
 };
 
@@ -239,7 +240,7 @@ function Confetti() {
   );
 }
 
-export default function Session({ category, exercises, existingLog, filters, onFinish, onBack }: Props) {
+export default function Session({ category, exercises, existingLog, filters, onFinish, onSave, onBack }: Props) {
   const poolSize = exercises.filter((e) => {
     if (e.category !== category) return false;
     if (!filters.equipment) return true;
@@ -284,6 +285,21 @@ export default function Session({ category, exercises, existingLog, filters, onF
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [picked, existingLog]);
+
+  // Auto-save changes when resuming an existing log
+  useEffect(() => {
+    if (!existingLog || !onSave || workoutExercises.length === 0) return;
+    const t = setTimeout(() => {
+      onSave({
+        id: existingLog.id,
+        date: existingLog.date,
+        category,
+        exercises: workoutExercises,
+        completedAt: existingLog.completedAt,
+      });
+    }, 600);
+    return () => clearTimeout(t);
+  }, [workoutExercises]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const completed = workoutExercises.filter((e) => e.done && !e.phase).length;
   const total = workoutExercises.filter((e) => !e.phase).length;

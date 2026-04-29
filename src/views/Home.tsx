@@ -1,14 +1,40 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Category, WorkoutLog, WorkoutFilters, WorkoutGoal, WorkoutEquipment, WorkoutDuration } from '../types';
 import CategoryCard from '../components/CategoryCard';
 import StreakBadge from '../components/StreakBadge';
 import { useStreak } from '../hooks/useStreak';
+
+const CAT_BG: Record<Category, string> = {
+  push: 'bg-indigo-400', pull: 'bg-violet-400', legs: 'bg-cyan-400',
+  core: 'bg-emerald-400', cardio: 'bg-rose-400', crossfit: 'bg-amber-400',
+  fullbody: 'bg-sky-400', yoga: 'bg-pink-400',
+};
+
+const CAT_LABEL: Record<Category, string> = {
+  push: 'Push', pull: 'Pull', legs: 'Legs', core: 'Core',
+  cardio: 'Cardio', crossfit: 'Crossfit', fullbody: 'Full Body', yoga: 'Yoga',
+};
+
+const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+function getWeekDays(today: string): string[] {
+  const d = new Date(today + 'T12:00:00');
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return Array.from({ length: 7 }, (_, i) => {
+    const dd = new Date(d);
+    dd.setDate(d.getDate() + i);
+    return dd.toISOString().slice(0, 10);
+  });
+}
 
 const CATEGORIES: Category[] = ['push', 'pull', 'legs', 'core', 'cardio', 'crossfit', 'fullbody', 'yoga'];
 
 type Props = {
   onStart: (category: Category) => void;
   onLibrary: () => void;
+  onProgress: () => void;
   workouts: WorkoutLog[];
   filters: WorkoutFilters;
   onFiltersChange: (f: WorkoutFilters) => void;
@@ -52,11 +78,19 @@ function FilterPills<T extends string | number>({
   );
 }
 
-export default function Home({ onStart, onLibrary, workouts, filters, onFiltersChange }: Props) {
+export default function Home({ onStart, onLibrary, onProgress, workouts, filters, onFiltersChange }: Props) {
   const { streak } = useStreak();
   const today = todayStr();
   const todayWorkout = workouts.find((w) => w.date === today);
   const [showFilters, setShowFilters] = useState(false);
+  const weekDays = useMemo(() => getWeekDays(today), [today]);
+  const dayMap = useMemo(() => {
+    const m = new Map<string, WorkoutLog>();
+    for (const w of workouts) {
+      if (!m.has(w.date)) m.set(w.date, w);
+    }
+    return m;
+  }, [workouts]);
 
   const hasActiveFilters =
     filters.goal !== null ||
@@ -95,6 +129,15 @@ export default function Home({ onStart, onLibrary, workouts, filters, onFiltersC
                 <circle cx="9" cy="6" r="2" fill="currentColor" stroke="none" />
                 <circle cx="15" cy="12" r="2" fill="currentColor" stroke="none" />
                 <circle cx="9" cy="18" r="2" fill="currentColor" stroke="none" />
+              </svg>
+            </button>
+            <button
+              onClick={onProgress}
+              className="p-2 rounded-xl bg-white border border-slate-200 shadow-sm hover:border-slate-300 transition-colors"
+              title="Weekly Progress"
+            >
+              <svg style={{ width: '18px', height: '18px' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </button>
             <button
@@ -185,6 +228,46 @@ export default function Home({ onStart, onLibrary, workouts, filters, onFiltersC
             </button>
           </div>
         )}
+      </div>
+
+      {/* Weekly strip */}
+      <div className="px-5 mb-4">
+        <button
+          onClick={onProgress}
+          className="w-full bg-white border border-slate-100 rounded-2xl px-4 py-3 shadow-sm flex items-center gap-3 hover:border-slate-200 active:scale-[0.99] transition-all"
+        >
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest w-14 shrink-0 text-left">
+            This week
+          </p>
+          <div className="flex flex-1 justify-between items-center">
+            {weekDays.map((dateStr, i) => {
+              const workout = dayMap.get(dateStr);
+              const isToday = dateStr === today;
+              const isFuture = dateStr > today;
+              return (
+                <div key={i} className="flex flex-col items-center gap-0.5">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[8px] font-bold ${
+                    workout
+                      ? `${CAT_BG[workout.category]} text-white`
+                      : isFuture
+                        ? 'bg-slate-50'
+                        : 'bg-slate-100'
+                  } ${isToday ? 'ring-2 ring-offset-1 ring-indigo-300' : ''}`}>
+                    {workout
+                      ? CAT_LABEL[workout.category].slice(0, 1).toUpperCase()
+                      : null}
+                  </div>
+                  <p className={`text-[8px] font-medium ${isToday ? 'text-indigo-500' : 'text-slate-300'}`}>
+                    {WEEK_DAYS[i].slice(0, 1)}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+          <svg className="w-4 h-4 text-slate-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
       </div>
 
       {/* Section label */}

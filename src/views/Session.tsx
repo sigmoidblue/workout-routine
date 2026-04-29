@@ -284,8 +284,8 @@ export default function Session({ category, exercises, existingLog, filters, onF
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [picked, existingLog]);
 
-  const completed = workoutExercises.filter((e) => e.done).length;
-  const total = workoutExercises.length;
+  const completed = workoutExercises.filter((e) => e.done && !e.phase).length;
+  const total = workoutExercises.filter((e) => !e.phase).length;
 
   useEffect(() => {
     if (completed === total && total > 0 && prevCompleted.current < total) {
@@ -299,7 +299,7 @@ export default function Session({ category, exercises, existingLog, filters, onF
   useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
 
   const handleExerciseChange = (i: number, updated: WorkoutExercise) => {
-    const wasUnchecked = !workoutExercises[i].done && updated.done;
+    const wasUnchecked = !workoutExercises[i].done && updated.done && !workoutExercises[i].phase;
     setWorkoutExercises((prev) => prev.map((ex, idx) => (idx === i ? updated : ex)));
 
     if (wasUnchecked) {

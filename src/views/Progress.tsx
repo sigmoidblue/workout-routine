@@ -236,7 +236,7 @@ export default function Progress({ workouts, exercises, onBack }: Props) {
                           : 'bg-slate-100'
                     } ${isToday ? 'ring-2 ring-offset-2 ring-indigo-300' : ''}`}>
                       {workout ? (
-                        <span className="text-[10px] font-bold text-white uppercase leading-none">
+                        <span className="text-[10px] font-bold text-white uppercase">
                           {CAT_LABEL[workout.category].slice(0, 2)}
                         </span>
                       ) : !isFuture ? (
@@ -257,9 +257,9 @@ export default function Progress({ workouts, exercises, onBack }: Props) {
               { label: 'Reps', value: stats.reps || '—' },
               { label: 'Volume', value: formatTonnage(stats.tonnage) },
             ].map(({ label, value }) => (
-              <div key={label} className="bg-white rounded-2xl px-2 py-3 text-center">
-                <p className="text-lg font-bold text-slate-900 leading-none">{value}</p>
-                <p className="text-[10px] text-slate-400 font-medium mt-1 leading-none">{label}</p>
+              <div key={label} className="bg-white rounded-2xl py-4 flex flex-col items-center gap-1">
+                <p className="text-sm font-bold text-slate-900 tabular-nums">{value}</p>
+                <p className="text-[10px] text-slate-400 font-medium">{label}</p>
               </div>
             ))}
           </div>

@@ -211,8 +211,8 @@ export default function Progress({ workouts, exercises, onBack }: Props) {
         </div>
       </div>
 
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-5 pb-10 space-y-3">
+      {/* Content */}
+      <div className="px-5 pb-10 space-y-3">
         {/* Capture target */}
         <div ref={cardRef} className="bg-slate-100 rounded-3xl p-3 space-y-2.5">
 
@@ -257,9 +257,9 @@ export default function Progress({ workouts, exercises, onBack }: Props) {
               { label: 'Reps', value: stats.reps || '—' },
               { label: 'Volume', value: formatTonnage(stats.tonnage) },
             ].map(({ label, value }) => (
-              <div key={label} className="bg-white rounded-2xl py-4 flex flex-col items-center gap-1">
-                <p className="text-sm font-bold text-slate-900 tabular-nums">{value}</p>
-                <p className="text-[10px] text-slate-400 font-medium">{label}</p>
+              <div key={label} className="bg-white rounded-2xl py-4 flex flex-col items-center justify-center gap-1">
+                <p className="text-sm font-bold text-slate-900 tabular-nums whitespace-nowrap">{value}</p>
+                <p className="text-[10px] text-slate-400 font-medium whitespace-nowrap">{label}</p>
               </div>
             ))}
           </div>

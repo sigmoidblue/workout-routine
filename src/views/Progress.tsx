@@ -274,9 +274,9 @@ export default function Progress({ workouts, exercises, onBack }: Props) {
                 {catsThisWeek.map((cat) => (
                   <span
                     key={cat}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${CAT_LIGHT[cat]} ${CAT_TEXT[cat]}`}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${CAT_LIGHT[cat]} ${CAT_TEXT[cat]}`}
                   >
-                    <span className={`w-1.5 h-1.5 rounded-full ${CAT_BG[cat]}`} />
+                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${CAT_BG[cat]}`} />
                     {CAT_LABEL[cat]}
                   </span>
                 ))}
@@ -293,9 +293,9 @@ export default function Progress({ workouts, exercises, onBack }: Props) {
               <div className="divide-y divide-slate-50">
                 {topExercises.map((ex) => (
                   <div key={ex.name} className="flex items-center justify-between py-2.5">
-                    <p className="text-sm font-medium text-slate-800 truncate flex-1 mr-3">
-                      {ex.name}
-                    </p>
+                    <div className="flex-1 min-w-0 mr-3">
+                      <p className="text-sm font-medium text-slate-800 truncate">{ex.name}</p>
+                    </div>
                     <div className="flex items-center gap-2 text-xs text-slate-400 flex-shrink-0">
                       <span>{ex.sets} {ex.sets === 1 ? 'set' : 'sets'}</span>
                       {ex.maxWeight > 0 && (

@@ -8,6 +8,7 @@ import Session from './views/Session';
 import Summary from './views/Summary';
 import Library from './views/Library';
 import Progress from './views/Progress';
+import CustomBuilder from './views/CustomBuilder';
 
 function makeId() {
   return Math.random().toString(36).slice(2, 10);
@@ -29,6 +30,7 @@ export default function App() {
   const [view, setView] = useState<View>('home');
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [summaryLog, setSummaryLog] = useState<WorkoutLog | null>(null);
+  const [customPool, setCustomPool] = useState<Exercise[] | null>(null);
 
   // Migrate exercise library when defaults are updated
   useEffect(() => {
@@ -48,6 +50,7 @@ export default function App() {
       setView('home');
       setActiveCategory(null);
       setSummaryLog(null);
+      setCustomPool(null);
     };
     window.addEventListener('popstate', handlePop);
     return () => window.removeEventListener('popstate', handlePop);
@@ -60,9 +63,20 @@ export default function App() {
 
   const handleStart = (category: Category) => {
     setActiveCategory(category);
-    setView('session');
-    // Push one history entry so swipe-back has something to return from
+    if (category === 'custom') {
+      setView('customBuilder');
+    } else {
+      setCustomPool(null);
+      setView('session');
+    }
     history.pushState(null, '');
+  };
+
+  const handleCustomStart = (pool: Exercise[]) => {
+    setCustomPool(pool);
+    setActiveCategory('custom');
+    setView('session');
+    history.replaceState(null, '');
   };
 
   const handleFinish = (log: WorkoutLog) => {
@@ -93,6 +107,18 @@ export default function App() {
     setExercises((prev) => prev.filter((e) => e.id !== id));
   };
 
+  if (view === 'customBuilder') {
+    return (
+      <div className="max-w-md mx-auto">
+        <CustomBuilder
+          exercises={exercises}
+          onStart={handleCustomStart}
+          onBack={goBack}
+        />
+      </div>
+    );
+  }
+
   if (view === 'session' && activeCategory) {
     return (
       <div className="max-w-md mx-auto">
@@ -104,6 +130,7 @@ export default function App() {
           onFinish={handleFinish}
           onSave={existingLog ? handleSave : undefined}
           onBack={goBack}
+          customPool={customPool ?? undefined}
         />
       </div>
     );

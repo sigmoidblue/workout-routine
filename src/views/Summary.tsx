@@ -11,7 +11,7 @@ type Props = {
 
 const CATEGORY_LABELS: Record<Category, string> = {
   push: 'Push', pull: 'Pull', legs: 'Legs', core: 'Core',
-  cardio: 'Cardio', crossfit: 'Crossfit', fullbody: 'Full Body', yoga: 'Yoga',
+  cardio: 'Cardio', crossfit: 'Crossfit', fullbody: 'Full Body', yoga: 'Yoga', custom: 'Custom Workout',
 };
 
 const CATEGORY_COLOR: Record<Category, string> = {
@@ -23,6 +23,7 @@ const CATEGORY_COLOR: Record<Category, string> = {
   crossfit: 'bg-amber-400',
   fullbody: 'bg-sky-400',
   yoga:     'bg-pink-400',
+  custom:   'bg-gray-400',
 };
 
 function formatDate(dateStr: string) {

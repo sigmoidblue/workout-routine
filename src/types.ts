@@ -6,7 +6,8 @@ export type Category =
   | 'cardio'
   | 'crossfit'
   | 'fullbody'
-  | 'yoga';
+  | 'yoga'
+  | 'custom';
 
 export type Exercise = {
   id: string;
@@ -48,7 +49,7 @@ export type StreakData = {
   longest: number;
 };
 
-export type View = 'home' | 'session' | 'library' | 'summary' | 'progress';
+export type View = 'home' | 'session' | 'library' | 'summary' | 'progress' | 'customBuilder';
 
 export type WorkoutGoal = 'strength' | 'muscle' | 'athletic';
 export type WorkoutEquipment = 'gym' | 'dumbbells' | 'home';

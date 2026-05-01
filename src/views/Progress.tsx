@@ -11,13 +11,13 @@ type Props = {
 
 const CAT_LABEL: Record<Category, string> = {
   push: 'Push', pull: 'Pull', legs: 'Legs', core: 'Core',
-  cardio: 'Cardio', crossfit: 'Crossfit', fullbody: 'Full Body', yoga: 'Yoga',
+  cardio: 'Cardio', crossfit: 'Crossfit', fullbody: 'Full Body', yoga: 'Yoga', custom: 'Custom',
 };
 
 const CAT_BG: Record<Category, string> = {
   push: 'bg-indigo-400', pull: 'bg-violet-400', legs: 'bg-cyan-400',
   core: 'bg-emerald-400', cardio: 'bg-rose-400', crossfit: 'bg-amber-400',
-  fullbody: 'bg-sky-400', yoga: 'bg-pink-400',
+  fullbody: 'bg-sky-400', yoga: 'bg-pink-400', custom: 'bg-orange-400',
 };
 
 // const CAT_TEXT: Record<Category, string> = {

@@ -5,7 +5,7 @@ const CATEGORIES: Category[] = ['push', 'pull', 'legs', 'core', 'cardio', 'cross
 
 const CATEGORY_LABELS: Record<Category, string> = {
   push: 'Push', pull: 'Pull', legs: 'Legs', core: 'Core',
-  cardio: 'Cardio', crossfit: 'Crossfit', fullbody: 'Full Body', yoga: 'Yoga',
+  cardio: 'Cardio', crossfit: 'Crossfit', fullbody: 'Full Body', yoga: 'Yoga', custom: 'Custom',
 };
 
 type Props = {

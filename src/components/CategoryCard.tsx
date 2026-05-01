@@ -15,6 +15,7 @@ const META: Record<Category, { label: string; sub: string; dot: string }> = {
   crossfit: { label: 'Crossfit',  sub: 'Power · Agility · Full Body',   dot: 'bg-amber-400' },
   fullbody: { label: 'Full Body', sub: 'Compound · Strength',           dot: 'bg-sky-400' },
   yoga:     { label: 'Yoga',      sub: 'Flexibility · Mobility',        dot: 'bg-pink-400' },
+  custom:   { label: 'Custom',    sub: 'Mix & Match',                   dot: 'bg-orange-400' },
 };
 
 export default function CategoryCard({ category, onClick, hasWorkout }: Props) {

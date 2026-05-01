@@ -26,20 +26,23 @@ export function useExercisePicker(
   category: Category,
   count = DEFAULT_COUNT,
   equipment: WorkoutEquipment | null = null,
+  customPool?: Exercise[],
 ) {
   const [seed, setSeed] = useState(0);
 
   const picked = useMemo(() => {
-    const pool = exercises.filter(
-      (e) => e.category === category && matchesEquipment(e, equipment)
-    );
+    const pool = customPool
+      ? customPool.filter((e) => matchesEquipment(e, equipment))
+      : exercises.filter(
+          (e) => e.category === category && matchesEquipment(e, equipment)
+        );
     // Shuffle within each group, compounds first then isolations (custom/untagged mixed with isolations)
     const compounds  = shuffle(pool.filter((e) => e.type === 'compound'));
     const isolations = shuffle(pool.filter((e) => e.type !== 'compound'));
     const ordered = [...compounds, ...isolations];
     return ordered.slice(0, Math.min(count, ordered.length));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [exercises, category, count, equipment, seed]);
+  }, [exercises, category, count, equipment, seed, customPool]);
 
   const reroll = () => setSeed((s) => s + 1);
 

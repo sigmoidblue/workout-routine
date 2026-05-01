@@ -117,6 +117,18 @@ export const warmupCooldown: Record<Category, PhaseExercises> = {
       cd('yoga-2', 'Supine Spinal Twist', 'yoga', 'spine', 'Shoulders flat on floor, breathe into the rotation. Hold 45s each side.'),
     ],
   },
+  custom: {
+    warmup: [
+      wu('custom-0', 'Jumping Jacks', 'custom', 'full body', 'Light pace to get the blood flowing. 30 reps.'),
+      wu('custom-1', 'Hip Circles', 'custom', 'hips', 'Hands on hips, slow deliberate circles. 10 reps each direction.'),
+      wu('custom-2', 'Arm Circles', 'custom', 'shoulders', 'Start small, gradually widen. 10 reps each direction.'),
+    ],
+    cooldown: [
+      cd('custom-0', "Child's Pose", 'custom', 'lower back / hips', 'Arms extended, sink hips toward heels, breathe deeply. Hold 45s.'),
+      cd('custom-1', 'Pigeon Pose', 'custom', 'glutes / hips', 'Ease in slowly, breathe through any tension. Hold 45s each side.'),
+      cd('custom-2', 'Seated Spinal Twist', 'custom', 'spine', 'Sit tall, rotate from the waist up. Hold 30s each side.'),
+    ],
+  },
 };
 
 /** Flat lookup map for quick id → Exercise resolution */

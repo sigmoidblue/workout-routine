@@ -29,29 +29,13 @@ type Props = {
   onFinish: (log: WorkoutLog) => void;
   onSave?: (log: WorkoutLog) => void;
   onBack: () => void;
+  customPool?: Exercise[];
 };
 
 const CATEGORY_LABELS: Record<Category, string> = {
   push: 'Push', pull: 'Pull', legs: 'Legs', core: 'Core',
-  cardio: 'Cardio', crossfit: 'Crossfit', fullbody: 'Full Body', yoga: 'Yoga',
+  cardio: 'Cardio', crossfit: 'Crossfit', fullbody: 'Full Body', yoga: 'Yoga', custom: 'Custom Workout',
 };
-
-const TOAST_MESSAGES = [
-  "Let's go!!",
-  "Yes!! Keep it up!",
-  "That's what I'm talking about!",
-  "You're on fire!",
-  "Don't stop now!",
-  "Beast mode activated!",
-  "Crushed it! Next one!",
-  "Look at you go!",
-  "Absolutely killing it!",
-  "Keep that energy up!",
-  "No stopping you now!",
-  "One step closer to goals!",
-  "You're a machine!",
-  "That's the spirit!",
-];
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
@@ -240,9 +224,9 @@ function Confetti() {
   );
 }
 
-export default function Session({ category, exercises, existingLog, filters, onFinish, onSave, onBack }: Props) {
-  const poolSize = exercises.filter((e) => {
-    if (e.category !== category) return false;
+export default function Session({ category, exercises, existingLog, filters, onFinish, onSave, onBack, customPool }: Props) {
+  const poolSize = (customPool ?? exercises).filter((e) => {
+    if (!customPool && e.category !== category) return false;
     if (!filters.equipment) return true;
     const req = e.equipment ?? 'gym';
     if (filters.equipment === 'gym') return true;
@@ -252,11 +236,11 @@ export default function Session({ category, exercises, existingLog, filters, onF
   const defaultCount = filters.duration === 30 ? 5 : filters.duration === 45 ? 6 : filters.duration === 60 ? 8 : 7;
   const [count, setCount] = useState(() => Math.min(defaultCount, poolSize));
   useEffect(() => { setCount(Math.min(defaultCount, poolSize)); }, [defaultCount, poolSize]);
-  const { picked, reroll } = useExercisePicker(exercises, category, count, filters.equipment);
+  const { picked, reroll } = useExercisePicker(exercises, category, count, filters.equipment, customPool);
   const [workoutExercises, setWorkoutExercises] = useState<WorkoutExercise[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [pulsing, setPulsing] = useState(false);
-  const [toast, setToast] = useState<{ msg: string; key: number } | null>(null);
+  const [toast] = useState<{ msg: string; key: number } | null>(null);
   const [showTimer, setShowTimer] = useState(false);
   const [timerRunning, setTimerRunning] = useState(false);
   const [ssEnabled, setSsEnabled] = useState(false);
@@ -361,13 +345,16 @@ export default function Session({ category, exercises, existingLog, filters, onF
     if (!ex) return [];
     const inSession = new Set(workoutExercises.map((w) => w.exerciseId));
     if (barbellIds.has(we.exerciseId)) {
-      // Main lift: only offer other main lifts in the same category
-      return exercises.filter(
+      const altSource = customPool ?? exercises;
+      return altSource.filter(
         (e) => e.category === ex.category && e.id !== ex.id && !inSession.has(e.id) && barbellIds.has(e.id)
       );
     }
     if (!ex.muscle) return [];
-    const pool = exercises.filter((e) => e.category === ex.category && e.id !== ex.id && !inSession.has(e.id));
+    const altSource = customPool ?? exercises;
+    const pool = customPool
+      ? altSource.filter((e) => e.id !== ex.id && !inSession.has(e.id))
+      : altSource.filter((e) => e.category === ex.category && e.id !== ex.id && !inSession.has(e.id));
     return pool.sort((a, b) => (a.muscle === ex.muscle ? 0 : 1) - (b.muscle === ex.muscle ? 0 : 1));
   };
 

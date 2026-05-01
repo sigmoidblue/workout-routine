@@ -61,6 +61,8 @@ export default function CustomBuilder({ exercises, onStart, onBack }: Props) {
   const toggleAll = () => {
     if (selectAll) {
       setSelectAll(false);
+      setSelectedCats(new Set());
+      setSelectedMuscles(new Set());
     } else {
       setSelectAll(true);
       setSelectedCats(new Set(ALL_CATS));

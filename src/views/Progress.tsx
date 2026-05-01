@@ -214,110 +214,112 @@ export default function Progress({ workouts, exercises, onBack }: Props) {
       {/* Content */}
       <div className="px-5 pb-10 space-y-3">
         {/* Capture target */}
-        <div ref={cardRef} className="bg-slate-100 rounded-3xl p-3 space-y-2.5">
+        <div ref={cardRef} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
 
-          {/* 7-day strip */}
-          <div className="bg-white rounded-2xl px-4 py-4">
-            <div className="flex justify-between">
-              {weekDays.map((dateStr, i) => {
-                const workout = dayMap.get(dateStr);
-                const isToday = dateStr === todayStr;
-                const isFuture = dateStr > todayStr;
-                return (
-                  <div key={i} className="flex flex-col items-center gap-1.5">
-                    <p className={`text-[10px] font-semibold ${isToday ? 'text-indigo-500' : 'text-slate-400'}`}>
-                      {DAYS[i]}
-                    </p>
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
-                      workout
-                        ? `${CAT_BG[workout.category]} shadow-sm`
-                        : isFuture
-                          ? 'bg-slate-50 border border-dashed border-slate-200'
-                          : 'bg-slate-100'
-                    } ${isToday ? 'ring-2 ring-offset-2 ring-indigo-300' : ''}`}>
-                      {workout ? (
-                        <span className="text-[10px] font-bold text-white uppercase">
-                          {CAT_LABEL[workout.category].slice(0, 2)}
-                        </span>
-                      ) : !isFuture ? (
-                        <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                      ) : null}
+            {/* 7-day strip */}
+            <div className="px-6 pt-5 pb-4">
+              <div className="flex justify-between">
+                {weekDays.map((dateStr, i) => {
+                  const workout = dayMap.get(dateStr);
+                  const isToday = dateStr === todayStr;
+                  const isFuture = dateStr > todayStr;
+                  return (
+                    <div key={i} className="flex flex-col items-center gap-1.5">
+                      <p className={`text-[10px] font-semibold ${isToday ? 'text-indigo-500' : 'text-slate-400'}`}>
+                        {DAYS[i]}
+                      </p>
+                      <div className={`w-5 h-5 rounded-full ${
+                        workout
+                          ? CAT_BG[workout.category]
+                          : isFuture
+                            ? 'bg-slate-100 border border-dashed border-slate-200'
+                            : 'bg-slate-200'
+                      } ${isToday ? 'ring-2 ring-offset-2 ring-indigo-300' : ''}`}>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Stats grid */}
-          <div className="grid grid-cols-4 gap-2">
-            {[
-              { label: 'Days', value: stats.days || '—' },
-              { label: 'Sets', value: stats.sets || '—' },
-              { label: 'Reps', value: stats.reps || '—' },
-              { label: 'Volume', value: formatTonnage(stats.tonnage) },
-            ].map(({ label, value }) => (
-              <div key={label} className="bg-white rounded-2xl py-4 flex flex-col items-center justify-center gap-1">
-                <p className="text-sm font-bold text-slate-900 tabular-nums whitespace-nowrap">{value}</p>
-                <p className="text-[10px] text-slate-400 font-medium whitespace-nowrap">{label}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Categories trained */}
-          {catsThisWeek.length > 0 && (
-            <div className="bg-white rounded-2xl px-4 py-4">
-              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-3">
-                Trained this week
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {catsThisWeek.map((cat) => (
-                  <span
-                    key={cat}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${CAT_LIGHT[cat]} ${CAT_TEXT[cat]}`}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${CAT_BG[cat]}`} />
-                    {CAT_LABEL[cat]}
-                  </span>
-                ))}
+                  );
+                })}
               </div>
             </div>
-          )}
 
-          {/* Top exercises */}
-          {topExercises.length > 0 && (
-            <div className="bg-white rounded-2xl px-4 py-4">
-              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-3">
-                Exercises logged
-              </p>
-              <div className="divide-y divide-slate-50">
-                {topExercises.map((ex) => (
-                  <div key={ex.name} className="flex items-center justify-between py-2.5">
-                    <div className="flex-1 min-w-0 mr-3">
-                      <p className="text-sm font-medium text-slate-800 truncate">{ex.name}</p>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-400 flex-shrink-0">
-                      <span>{ex.sets} {ex.sets === 1 ? 'set' : 'sets'}</span>
-                      {ex.maxWeight > 0 && (
-                        <>
-                          <span className="text-slate-200">·</span>
-                          <span className="font-semibold text-slate-600">{ex.maxWeight} kg</span>
-                        </>
-                      )}
-                    </div>
+            {/* Stats row */}
+            <div className="px-6 py-4 border-t border-slate-50">
+              <div className="grid grid-cols-4 gap-3 text-center">
+                {[
+                  { label: 'Days', value: String(stats.days || '—') },
+                  { label: 'Sets', value: String(stats.sets || '—') },
+                  { label: 'Reps', value: String(stats.reps || '—') },
+                  { label: 'Volume', value: formatTonnage(stats.tonnage) },
+                ].map(({ label, value }) => (
+                  <div key={label}>
+                    <p className="text-lg font-bold text-slate-800">{value}</p>
+                    <p className="text-[10px] text-slate-400 font-medium mt-1">{label}</p>
                   </div>
                 ))}
               </div>
             </div>
-          )}
 
-          {/* Empty state */}
-          {weekWorkouts.length === 0 && (
-            <div className="bg-white rounded-2xl px-4 py-10 text-center">
-              <p className="text-slate-400 text-sm font-medium">No workouts this week</p>
-              <p className="text-slate-300 text-xs mt-1">Get moving!</p>
+            {/* Categories trained */}
+            {catsThisWeek.length > 0 && (
+              <div className="px-6 py-4 border-t border-slate-50">
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2.5">
+                  Trained this week
+                </p>
+                <div className="flex flex-wrap gap-x-4 gap-y-2">
+                  {catsThisWeek.map((cat) => (
+                    <div key={cat} className="flex items-center gap-2">
+                      <div className={`w-2.5 h-2.5 rounded-full ${CAT_BG[cat]}`} />
+                      <p className="text-xs font-medium text-slate-600">
+                        {CAT_LABEL[cat]}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Top exercises */}
+            {topExercises.length > 0 && (
+              <div className="px-6 py-2 border-t border-slate-50">
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1 pt-2">
+                  Exercises logged
+                </p>
+                <div className="divide-y divide-slate-50">
+                  {topExercises.map((ex) => (
+                    <div key={ex.name} className="flex items-center gap-3 py-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-800">{ex.name}</p>
+                      </div>
+                      <p className="text-xs text-slate-400 flex-shrink-0">
+                        {ex.sets} {ex.sets === 1 ? 'set' : 'sets'}
+                        {ex.maxWeight > 0 && (
+                          <>
+                            <span className="mx-1 text-slate-200">·</span>
+                            <span className="font-semibold text-slate-600">{ex.maxWeight} kg</span>
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Empty state */}
+            {weekWorkouts.length === 0 && (
+              <div className="px-6 py-10 text-center">
+                <p className="text-slate-400 text-sm font-medium">No workouts this week</p>
+                <p className="text-slate-300 text-xs mt-1">Get moving!</p>
+              </div>
+            )}
+
+            {/* Footer */}
+            <div className="px-6 py-3 bg-slate-50 border-t border-slate-100">
+              <p className="text-[10px] text-slate-400 text-center font-medium">
+                {formatWeekLabel(weekStart)}
+              </p>
             </div>
-          )}
+
         </div>
 
         {/* Share button */}

@@ -20,17 +20,17 @@ const CAT_BG: Record<Category, string> = {
   fullbody: 'bg-sky-400', yoga: 'bg-pink-400',
 };
 
-const CAT_TEXT: Record<Category, string> = {
-  push: 'text-indigo-600', pull: 'text-violet-600', legs: 'text-cyan-700',
-  core: 'text-emerald-700', cardio: 'text-rose-600', crossfit: 'text-amber-600',
-  fullbody: 'text-sky-600', yoga: 'text-pink-600',
-};
+// const CAT_TEXT: Record<Category, string> = {
+//   push: 'text-indigo-600', pull: 'text-violet-600', legs: 'text-cyan-700',
+//   core: 'text-emerald-700', cardio: 'text-rose-600', crossfit: 'text-amber-600',
+//   fullbody: 'text-sky-600', yoga: 'text-pink-600',
+// };
 
-const CAT_LIGHT: Record<Category, string> = {
-  push: 'bg-indigo-50', pull: 'bg-violet-50', legs: 'bg-cyan-50',
-  core: 'bg-emerald-50', cardio: 'bg-rose-50', crossfit: 'bg-amber-50',
-  fullbody: 'bg-sky-50', yoga: 'bg-pink-50',
-};
+// const CAT_LIGHT: Record<Category, string> = {
+//   push: 'bg-indigo-50', pull: 'bg-violet-50', legs: 'bg-cyan-50',
+//   core: 'bg-emerald-50', cardio: 'bg-rose-50', crossfit: 'bg-amber-50',
+//   fullbody: 'bg-sky-50', yoga: 'bg-pink-50',
+// };
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 

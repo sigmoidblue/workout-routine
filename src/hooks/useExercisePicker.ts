@@ -33,11 +33,10 @@ export function useExercisePicker(
     const pool = exercises.filter(
       (e) => e.category === category && matchesEquipment(e, equipment)
     );
-    // Shuffle within each group first, then put compounds before isolations
-    const compounds = shuffle(pool.filter((e) => e.type === 'compound'));
-    const isolations = shuffle(pool.filter((e) => e.type === 'isolation'));
-    const untagged   = shuffle(pool.filter((e) => !e.type));
-    const ordered = [...compounds, ...isolations, ...untagged];
+    // Shuffle within each group, compounds first then isolations (custom/untagged mixed with isolations)
+    const compounds  = shuffle(pool.filter((e) => e.type === 'compound'));
+    const isolations = shuffle(pool.filter((e) => e.type !== 'compound'));
+    const ordered = [...compounds, ...isolations];
     return ordered.slice(0, Math.min(count, ordered.length));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exercises, category, count, equipment, seed]);

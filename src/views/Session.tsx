@@ -319,12 +319,8 @@ export default function Session({ category, exercises, existingLog, filters, onF
     const wasUnchecked = !workoutExercises[i].done && updated.done && !workoutExercises[i].phase;
     setWorkoutExercises((prev) => prev.map((ex, idx) => (idx === i ? updated : ex)));
 
-    if (wasUnchecked) {
-      const msg = TOAST_MESSAGES[Math.floor(Math.random() * TOAST_MESSAGES.length)];
-      if (toastTimer.current) clearTimeout(toastTimer.current);
-      setToast({ msg, key: Date.now() });
-      toastTimer.current = setTimeout(() => setToast(null), 2100);
-    }
+    // motivational toasts removed — redundant with progress ring
+    void wasUnchecked;
   };
 
   const handleFinish = () => {

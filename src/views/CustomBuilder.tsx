@@ -31,7 +31,7 @@ function capitalize(s: string): string {
 
 type Props = {
   exercises: Exercise[];
-  onStart: (pool: Exercise[]) => void;
+  onStart: (pool: Exercise[], name?: string) => void;
   onBack: () => void;
 };
 
@@ -44,6 +44,7 @@ export default function CustomBuilder({ exercises, onStart, onBack }: Props) {
   const [presets, setPresets] = useLocalStorage<CustomPreset[]>('wr_custom_presets', []);
   const [showNameInput, setShowNameInput] = useState(false);
   const [nameValue, setNameValue] = useState('');
+  const [activePresetName, setActivePresetName] = useState<string | undefined>();
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
@@ -65,6 +66,7 @@ export default function CustomBuilder({ exercises, onStart, onBack }: Props) {
   const hasSelection = selectedCats.size > 0 || selectedMuscles.size > 0 || selectAll;
 
   const toggleAll = () => {
+    setActivePresetName(undefined);
     if (selectAll) {
       setSelectAll(false);
       setSelectedCats(new Set());
@@ -77,6 +79,7 @@ export default function CustomBuilder({ exercises, onStart, onBack }: Props) {
   };
 
   const toggleCat = (cat: Category) => {
+    setActivePresetName(undefined);
     setSelectAll(false);
     setSelectedCats((prev) => {
       const next = new Set(prev);
@@ -86,6 +89,7 @@ export default function CustomBuilder({ exercises, onStart, onBack }: Props) {
   };
 
   const toggleMuscle = (muscle: string) => {
+    setActivePresetName(undefined);
     setSelectAll(false);
     setSelectedMuscles((prev) => {
       const next = new Set(prev);
@@ -110,6 +114,7 @@ export default function CustomBuilder({ exercises, onStart, onBack }: Props) {
     setSelectedCats(cats);
     setSelectedMuscles(new Set(preset.muscles));
     setSelectAll(cats.size === ALL_CATS.size && preset.muscles.length === 0);
+    setActivePresetName(preset.name);
   };
 
   const catLabelMap = Object.fromEntries(STANDARD_CATEGORIES.map(c => [c.value, c.label]));
@@ -295,7 +300,7 @@ export default function CustomBuilder({ exercises, onStart, onBack }: Props) {
       {/* Start button */}
       <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-6 bg-gradient-to-t from-[#eef1f8] via-[#eef1f8]/90 to-transparent">
         <button
-          onClick={() => onStart(matchingPool)}
+          onClick={() => onStart(matchingPool, activePresetName)}
           disabled={matchingPool.length === 0}
           className={`w-full py-4 rounded-2xl font-semibold text-base transition-all duration-150 ${
             matchingPool.length > 0

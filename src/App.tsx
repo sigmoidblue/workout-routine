@@ -31,6 +31,7 @@ export default function App() {
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [summaryLog, setSummaryLog] = useState<WorkoutLog | null>(null);
   const [customPool, setCustomPool] = useState<Exercise[] | null>(null);
+  const [customName, setCustomName] = useState<string | undefined>();
 
   // Migrate exercise library when defaults are updated
   useEffect(() => {
@@ -51,6 +52,7 @@ export default function App() {
       setActiveCategory(null);
       setSummaryLog(null);
       setCustomPool(null);
+      setCustomName(undefined);
     };
     window.addEventListener('popstate', handlePop);
     return () => window.removeEventListener('popstate', handlePop);
@@ -72,8 +74,9 @@ export default function App() {
     history.pushState(null, '');
   };
 
-  const handleCustomStart = (pool: Exercise[]) => {
+  const handleCustomStart = (pool: Exercise[], name?: string) => {
     setCustomPool(pool);
+    setCustomName(name);
     setActiveCategory('custom');
     setView('session');
     history.replaceState(null, '');
@@ -131,6 +134,7 @@ export default function App() {
           onSave={existingLog ? handleSave : undefined}
           onBack={goBack}
           customPool={customPool ?? undefined}
+          customName={customName}
         />
       </div>
     );

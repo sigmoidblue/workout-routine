@@ -30,6 +30,7 @@ type Props = {
   onSave?: (log: WorkoutLog) => void;
   onBack: () => void;
   customPool?: Exercise[];
+  customName?: string;
 };
 
 const CATEGORY_LABELS: Record<Category, string> = {
@@ -224,7 +225,7 @@ function Confetti() {
   );
 }
 
-export default function Session({ category, exercises, existingLog, filters, onFinish, onSave, onBack, customPool }: Props) {
+export default function Session({ category, exercises, existingLog, filters, onFinish, onSave, onBack, customPool, customName }: Props) {
   const poolSize = (customPool ?? exercises).filter((e) => {
     if (!customPool && e.category !== category) return false;
     if (!filters.equipment) return true;
@@ -460,7 +461,7 @@ export default function Session({ category, exercises, existingLog, filters, onF
             <p className="text-xs font-medium text-slate-500 uppercase tracking-widest">
               {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </p>
-            <h1 className="text-xl font-bold text-slate-900">{CATEGORY_LABELS[category]}</h1>
+            <h1 className="text-xl font-bold text-slate-900">{customName ?? CATEGORY_LABELS[category]}</h1>
           </div>
           {!existingLog && (
             <div className="flex items-center bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">

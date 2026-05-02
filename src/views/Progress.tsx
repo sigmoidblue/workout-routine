@@ -60,13 +60,14 @@ function formatWeekLabel(weekStart: string): string {
 
 function formatTonnage(kg: number): string {
   if (kg === 0) return '—';
-  if (kg >= 1000) return `${(kg / 1000).toFixed(1)}t`;
-  return `${kg}kg`;
+  if (kg >= 1000) return `${(kg / 1000).toFixed(1)}k kg`;
+  return `${kg} kg`;
 }
 
 export default function Progress({ workouts, exercises, onBack }: Props) {
   const [weekOffset, setWeekOffset] = useState(0);
   const [capturing, setCapturing] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -192,7 +193,7 @@ export default function Progress({ workouts, exercises, onBack }: Props) {
         </div>
         <div className="flex items-center gap-1">
           <button
-            onClick={() => setWeekOffset((v) => v - 1)}
+            onClick={() => { setWeekOffset((v) => v - 1); setSelectedDay(null); }}
             className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -200,7 +201,7 @@ export default function Progress({ workouts, exercises, onBack }: Props) {
             </svg>
           </button>
           <button
-            onClick={() => setWeekOffset((v) => Math.min(v + 1, 0))}
+            onClick={() => { setWeekOffset((v) => Math.min(v + 1, 0)); setSelectedDay(null); }}
             disabled={weekOffset === 0}
             className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 disabled:opacity-30 transition-colors"
           >
@@ -223,24 +224,80 @@ export default function Progress({ workouts, exercises, onBack }: Props) {
                   const workout = dayMap.get(dateStr);
                   const isToday = dateStr === todayStr;
                   const isFuture = dateStr > todayStr;
+                  const isSelected = selectedDay === dateStr;
                   return (
-                    <div key={i} className="flex flex-col items-center gap-1.5">
+                    <button
+                      key={i}
+                      onClick={() => workout && setSelectedDay(isSelected ? null : dateStr)}
+                      className={`flex flex-col items-center gap-1.5 ${workout ? 'cursor-pointer' : 'cursor-default'}`}
+                    >
                       <p className={`text-[10px] font-semibold ${isToday ? 'text-indigo-500' : 'text-slate-400'}`}>
                         {DAYS[i]}
                       </p>
-                      <div className={`w-5 h-5 rounded-full ${
+                      <div className={`w-5 h-5 rounded-full transition-all ${
                         workout
                           ? CAT_BG[workout.category]
                           : isFuture
                             ? 'bg-slate-100 border border-dashed border-slate-200'
                             : 'bg-slate-200'
-                      } ${isToday ? 'ring-2 ring-offset-2 ring-indigo-300' : ''}`}>
+                      } ${isToday ? 'ring-2 ring-offset-2 ring-indigo-300' : ''} ${isSelected ? 'ring-2 ring-offset-2 ring-slate-400 scale-125' : ''}`}>
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
             </div>
+
+            {/* Selected day detail */}
+            {selectedDay && dayMap.get(selectedDay) && (() => {
+              const dayWorkouts = weekWorkouts.filter(w => w.date === selectedDay);
+              const dayDate = new Date(selectedDay + 'T12:00:00');
+              const dayLabel = dayDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+              return (
+                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-semibold text-slate-600">{dayLabel}</p>
+                    <button onClick={() => setSelectedDay(null)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  {dayWorkouts.map(w => (
+                    <div key={w.id} className="mb-3 last:mb-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className={`w-2.5 h-2.5 rounded-full ${CAT_BG[w.category]}`} />
+                        <p className="text-xs font-semibold text-slate-700">{CAT_LABEL[w.category]}</p>
+                      </div>
+                      <div className="space-y-1.5">
+                        {w.exercises.filter(we => we.done && !we.phase).map(we => {
+                          const ex = exercises.find(e => e.id === we.exerciseId) ?? phaseExerciseMap.get(we.exerciseId);
+                          const setsSummary = (we.sets ?? []).filter(s => s.reps > 0);
+                          return (
+                            <div key={we.exerciseId} className="flex items-center justify-between py-1">
+                              <p className="text-sm text-slate-700">{ex?.name ?? 'Unknown'}</p>
+                              {setsSummary.length > 0 && (
+                                <p className="text-xs text-slate-400 tabular-nums">
+                                  {setsSummary.map((s, i) => (
+                                    <span key={i}>
+                                      {i > 0 && <span className="mx-0.5 text-slate-200">/</span>}
+                                      {s.reps}{s.weight ? `×${s.weight}` : ''}
+                                    </span>
+                                  ))}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                        {w.exercises.filter(we => we.done && !we.phase).length === 0 && (
+                          <p className="text-xs text-slate-400">No exercises logged</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
 
             {/* Stats row */}
             <div className="px-6 py-4 border-t border-slate-50">

@@ -25,6 +25,8 @@ export default function ExerciseItem({
   const [showSwap, setShowSwap] = useState(false);
   const [showLink, setShowLink] = useState(false);
 
+  const hideWeight = exercise.category === 'cardio' || exercise.category === 'yoga';
+
   const closeAll = () => { setShowLog(false); setShowSwap(false); setShowLink(false); };
 
   const toggleDone = () => {
@@ -201,12 +203,16 @@ export default function ExerciseItem({
                     className="w-14 bg-slate-50 text-slate-800 text-sm rounded-lg px-2 py-1.5 border border-slate-200 focus:outline-none focus:border-indigo-400 text-center"
                   />
                   <span className="text-xs text-slate-500">reps</span>
-                  <input
-                    type="number" min={0} placeholder="0" value={set.weight ?? ''}
-                    onChange={(e) => updateSet(i, { ...set, weight: e.target.value === '' ? undefined : Number(e.target.value) })}
-                    className="w-14 bg-slate-50 text-slate-800 text-sm rounded-lg px-2 py-1.5 border border-slate-200 focus:outline-none focus:border-indigo-400 text-center"
-                  />
-                  <span className="text-xs text-slate-500">kg</span>
+                  {!hideWeight && (
+                    <>
+                      <input
+                        type="number" min={0} placeholder="0" value={set.weight ?? ''}
+                        onChange={(e) => updateSet(i, { ...set, weight: e.target.value === '' ? undefined : Number(e.target.value) })}
+                        className="w-14 bg-slate-50 text-slate-800 text-sm rounded-lg px-2 py-1.5 border border-slate-200 focus:outline-none focus:border-indigo-400 text-center"
+                      />
+                      <span className="text-xs text-slate-500">kg</span>
+                    </>
+                  )}
                   <button onClick={() => removeSet(i)} className="text-slate-300 hover:text-red-400 transition-colors p-1 ml-auto">
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

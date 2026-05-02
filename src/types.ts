@@ -62,3 +62,10 @@ export type WorkoutFilters = {
   experience: WorkoutExperience | null;
   duration: WorkoutDuration | null;
 };
+
+export type CustomPreset = {
+  id: string;
+  name: string;
+  categories: Category[];
+  muscles: string[];
+};

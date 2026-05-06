@@ -16,8 +16,29 @@ const defaultStreak: StreakData = {
   longest: 0,
 };
 
+/** Check if a streak is still alive given today's date. */
+function isStreakAlive(lastWorkoutDate: string, todayStr: string): boolean {
+  if (!lastWorkoutDate) return false;
+  const diff = daysBetween(lastWorkoutDate, todayStr);
+  if (diff <= 1) return true; // worked out today or yesterday
+  if (diff === 2) {
+    // Allow a 2-day gap only if the skipped day is a Sunday
+    const gapDate = new Date(lastWorkoutDate + 'T12:00:00');
+    gapDate.setDate(gapDate.getDate() + 1);
+    if (gapDate.getDay() === 0) return true;
+  }
+  return false;
+}
+
 export function useStreak() {
   const [streak, setStreak] = useLocalStorage<StreakData>('wr_streak', defaultStreak);
+
+  // Reset stale streak on read
+  const todayStr = today();
+  if (streak.current > 0 && !isStreakAlive(streak.lastWorkoutDate, todayStr)) {
+    // Streak has expired — reset it
+    setStreak({ ...streak, current: 0 });
+  }
 
   const incrementStreak = () => {
     const todayStr = today();

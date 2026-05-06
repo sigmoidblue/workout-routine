@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Category, Exercise, WorkoutLog, View, WorkoutFilters } from './types';
+import { Category, CustomPreset, Exercise, WorkoutLog, View, WorkoutFilters } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useStreak } from './hooks/useStreak';
 import { defaultExercises, EXERCISES_SEED_VERSION } from './data/defaultExercises';
@@ -30,6 +30,7 @@ export default function App() {
   const [view, setView] = useState<View>('home');
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [summaryLog, setSummaryLog] = useState<WorkoutLog | null>(null);
+  const [presets] = useLocalStorage<CustomPreset[]>('wr_custom_presets', []);
   const [customPool, setCustomPool] = useState<Exercise[] | null>(null);
   const [customName, setCustomName] = useState<string | undefined>();
 
@@ -80,6 +81,24 @@ export default function App() {
     setActiveCategory('custom');
     setView('session');
     history.replaceState(null, '');
+  };
+
+  const handleStartPreset = (preset: CustomPreset) => {
+    const catSet = new Set(preset.categories);
+    const muscleSet = new Set(preset.muscles);
+    const pool = exercises.filter((ex) => {
+      if (catSet.has(ex.category)) return true;
+      if (muscleSet.size > 0 && ex.muscle) {
+        const tags = ex.muscle.split(' / ').map((m) => m.trim().toLowerCase());
+        if (tags.some((t) => muscleSet.has(t))) return true;
+      }
+      return false;
+    });
+    setCustomPool(pool);
+    setCustomName(preset.name);
+    setActiveCategory('custom');
+    setView('session');
+    history.pushState(null, '');
   };
 
   const handleFinish = (log: WorkoutLog) => {
@@ -193,6 +212,8 @@ export default function App() {
         workouts={workouts}
         filters={filters}
         onFiltersChange={setFilters}
+        presets={presets}
+        onStartPreset={handleStartPreset}
       />
     </div>
   );

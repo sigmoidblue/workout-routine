@@ -4,6 +4,9 @@ type Props = {
   category: Category;
   onClick: () => void;
   hasWorkout?: boolean;
+  labelOverride?: string;
+  subOverride?: string;
+  dotOverride?: string;
 };
 
 const META: Record<Category, { label: string; sub: string; dot: string }> = {
@@ -18,8 +21,11 @@ const META: Record<Category, { label: string; sub: string; dot: string }> = {
   custom:   { label: 'Custom',    sub: 'Mix & Match',                   dot: 'bg-orange-400' },
 };
 
-export default function CategoryCard({ category, onClick, hasWorkout }: Props) {
-  const { label, sub, dot } = META[category];
+export default function CategoryCard({ category, onClick, hasWorkout, labelOverride, subOverride, dotOverride }: Props) {
+  const meta = META[category];
+  const label = labelOverride ?? meta.label;
+  const sub = subOverride ?? meta.sub;
+  const dot = dotOverride ?? meta.dot;
 
   return (
     <button

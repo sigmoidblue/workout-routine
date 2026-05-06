@@ -68,4 +68,5 @@ export type CustomPreset = {
   name: string;
   categories: Category[];
   muscles: string[];
+  color: string;
 };

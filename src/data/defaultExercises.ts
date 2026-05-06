@@ -77,6 +77,8 @@ export const defaultExercises: Exercise[] = [
   e('DB Rear Delt Fly',             'pull', 'rear delts',      "Hinge forward and think of spreading wings — your elbows should travel up and out, not back.",                                                   'isolation', { equipment: 'dumbbells' }),
   e('DB Shrug',                     'pull', 'traps',           "Hold for a beat at the top — elevate straight up, no rolling or rotating your shoulders.",                                                       'isolation', { equipment: 'dumbbells' }),
   e('DB Reverse Curl',              'pull', 'forearms',        "Overhand grip with neutral wrists — underrated for forearm and grip development.",                                                               'isolation', { equipment: 'dumbbells' }),
+  e('DB Forearm Curl',              'pull', 'forearms',        "Rest your forearms on your thighs or a bench, palms up — curl the weight using only your wrists for full range of motion.",                        'isolation', { equipment: 'dumbbells' }),
+  e('Machine Rear Delt Fly',        'pull', 'rear delts',      "Set the handles to chest height and keep a slight elbow bend — focus on squeezing your shoulder blades together at the peak.",                     'isolation', { equipment: 'gym' }),
 
   // ── LEGS ─────────────────────────────────────────────────────────────────
   // Gym / barbell

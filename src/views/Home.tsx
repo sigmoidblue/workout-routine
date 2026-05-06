@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Category, WorkoutLog, WorkoutFilters, WorkoutGoal, WorkoutEquipment, WorkoutDuration } from '../types';
+import { Category, CustomPreset, WorkoutLog, WorkoutFilters, WorkoutGoal, WorkoutEquipment, WorkoutDuration } from '../types';
 import CategoryCard from '../components/CategoryCard';
 import StreakBadge from '../components/StreakBadge';
 import { useStreak } from '../hooks/useStreak';
@@ -31,6 +31,15 @@ function getWeekDays(today: string): string[] {
 
 const CATEGORIES: Category[] = ['push', 'pull', 'legs', 'core', 'cardio', 'crossfit', 'fullbody', 'yoga', 'custom'];
 
+const CAT_LABEL_SHORT: Record<Category, string> = {
+  push: 'Push', pull: 'Pull', legs: 'Legs', core: 'Core',
+  cardio: 'Cardio', crossfit: 'Crossfit', fullbody: 'Full Body', yoga: 'Yoga', custom: 'Custom',
+};
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 type Props = {
   onStart: (category: Category) => void;
   onLibrary: () => void;
@@ -38,6 +47,8 @@ type Props = {
   workouts: WorkoutLog[];
   filters: WorkoutFilters;
   onFiltersChange: (f: WorkoutFilters) => void;
+  presets: CustomPreset[];
+  onStartPreset: (preset: CustomPreset) => void;
 };
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
@@ -78,7 +89,7 @@ function FilterPills<T extends string | number>({
   );
 }
 
-export default function Home({ onStart, onLibrary, onProgress, workouts, filters, onFiltersChange }: Props) {
+export default function Home({ onStart, onLibrary, onProgress, workouts, filters, onFiltersChange, presets, onStartPreset }: Props) {
   const { streak } = useStreak();
   const today = todayStr();
   const todayWorkout = workouts.find((w) => w.date === today);
@@ -288,6 +299,22 @@ export default function Home({ onStart, onLibrary, onProgress, workouts, filters
               hasWorkout={workouts.some((w) => w.date === today && w.category === cat)}
             />
           ))}
+          {presets.map((preset) => {
+            const tags = [
+              ...preset.categories.map((c) => CAT_LABEL_SHORT[c] ?? c),
+              ...preset.muscles.map(capitalize),
+            ].slice(0, 3).join(' · ');
+            return (
+              <CategoryCard
+                key={`preset-${preset.id}`}
+                category="custom"
+                onClick={() => onStartPreset(preset)}
+                labelOverride={preset.name}
+                subOverride={tags || 'Custom mix'}
+                dotOverride={preset.color || 'bg-orange-400'}
+              />
+            );
+          })}
         </div>
       </div>
     </div>

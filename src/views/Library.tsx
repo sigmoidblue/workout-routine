@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Exercise, Category } from '../types';
 
 const CATEGORIES: Category[] = ['push', 'pull', 'legs', 'core', 'cardio', 'crossfit', 'fullbody', 'yoga'];
@@ -15,12 +15,53 @@ type Props = {
   onBack: () => void;
 };
 
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 export default function Library({ exercises, onAdd, onDelete, onBack }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
   const [category, setCategory] = useState<Category>('push');
   const [muscle, setMuscle] = useState('');
+  const [showMuscleDropdown, setShowMuscleDropdown] = useState(false);
   const [activeCategory, setActiveCategory] = useState<Category | 'all'>('all');
+  const muscleInputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const allMuscles = useMemo(() => {
+    const set = new Set<string>();
+    for (const ex of exercises) {
+      if (!ex.muscle) continue;
+      for (const m of ex.muscle.split(' / ')) {
+        const trimmed = m.trim().toLowerCase();
+        if (trimmed) set.add(trimmed);
+      }
+    }
+    return Array.from(set).sort();
+  }, [exercises]);
+
+  const filteredMuscles = useMemo(() => {
+    const q = muscle.trim().toLowerCase();
+    if (!q) return allMuscles;
+    return allMuscles.filter((m) => m.includes(q));
+  }, [muscle, allMuscles]);
+
+  const isCustomValue = muscle.trim() && !allMuscles.includes(muscle.trim().toLowerCase());
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
+        muscleInputRef.current && !muscleInputRef.current.contains(e.target as Node)
+      ) {
+        setShowMuscleDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   const filtered = activeCategory === 'all'
     ? exercises
@@ -88,23 +129,52 @@ export default function Library({ exercises, onAdd, onDelete, onBack }: Props) {
             autoFocus
             className="w-full bg-slate-50 text-slate-800 rounded-xl px-3.5 py-2.5 text-sm border border-slate-200 focus:outline-none focus:border-indigo-400 placeholder-slate-400"
           />
-          <div className="flex gap-2">
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as Category)}
-              className="flex-1 bg-slate-50 text-slate-800 rounded-xl px-3 py-2.5 text-sm border border-slate-200 focus:outline-none focus:border-indigo-400"
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
-              ))}
-            </select>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value as Category)}
+            className="w-full bg-slate-50 text-slate-800 rounded-xl px-3 py-2.5 text-sm border border-slate-200 focus:outline-none focus:border-indigo-400"
+          >
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>{CATEGORY_LABELS[c]}</option>
+            ))}
+          </select>
+          <div className="relative">
             <input
+              ref={muscleInputRef}
               type="text"
               placeholder="Muscle group"
               value={muscle}
-              onChange={(e) => setMuscle(e.target.value)}
-              className="flex-1 bg-slate-50 text-slate-800 rounded-xl px-3 py-2.5 text-sm border border-slate-200 focus:outline-none focus:border-indigo-400 placeholder-slate-400"
+              onChange={(e) => { setMuscle(e.target.value); setShowMuscleDropdown(true); }}
+              onFocus={() => setShowMuscleDropdown(true)}
+              className="w-full bg-slate-50 text-slate-800 rounded-xl px-3.5 py-2.5 text-sm border border-slate-200 focus:outline-none focus:border-indigo-400 placeholder-slate-400"
             />
+            {showMuscleDropdown && (filteredMuscles.length > 0 || isCustomValue) && (
+              <div
+                ref={dropdownRef}
+                className="absolute z-10 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-40 overflow-y-auto"
+              >
+                {isCustomValue && (
+                  <button
+                    type="button"
+                    onClick={() => { setShowMuscleDropdown(false); }}
+                    className="w-full text-left px-3.5 py-2 text-sm hover:bg-indigo-50 transition-colors flex items-center gap-2"
+                  >
+                    <span className="text-indigo-600 font-medium">Add</span>
+                    <span className="text-slate-800">"{muscle.trim()}"</span>
+                  </button>
+                )}
+                {filteredMuscles.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => { setMuscle(capitalize(m)); setShowMuscleDropdown(false); }}
+                    className="w-full text-left px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    {capitalize(m)}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <button
             onClick={handleAdd}

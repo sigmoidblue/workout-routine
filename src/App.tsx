@@ -30,7 +30,7 @@ export default function App() {
   const [view, setView] = useState<View>('home');
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [summaryLog, setSummaryLog] = useState<WorkoutLog | null>(null);
-  const [presets] = useLocalStorage<CustomPreset[]>('wr_custom_presets', []);
+  const [presets, setPresets] = useLocalStorage<CustomPreset[]>('wr_custom_presets', []);
   const [customPool, setCustomPool] = useState<Exercise[] | null>(null);
   const [customName, setCustomName] = useState<string | undefined>();
 
@@ -136,6 +136,8 @@ export default function App() {
           exercises={exercises}
           onStart={handleCustomStart}
           onBack={goBack}
+          presets={presets}
+          setPresets={setPresets}
         />
       </div>
     );

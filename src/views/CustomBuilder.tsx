@@ -1,6 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, Dispatch, SetStateAction } from 'react';
 import { Category, Exercise, CustomPreset } from '../types';
-import { useLocalStorage } from '../hooks/useLocalStorage';
 
 const STANDARD_CATEGORIES: { value: Category; label: string }[] = [
   { value: 'push', label: 'Push' },
@@ -33,6 +32,8 @@ type Props = {
   exercises: Exercise[];
   onStart: (pool: Exercise[], name?: string) => void;
   onBack: () => void;
+  presets: CustomPreset[];
+  setPresets: Dispatch<SetStateAction<CustomPreset[]>>;
 };
 
 const PRESET_COLORS = [
@@ -42,11 +43,10 @@ const PRESET_COLORS = [
 
 const ALL_CATS = new Set(STANDARD_CATEGORIES.map((c) => c.value));
 
-export default function CustomBuilder({ exercises, onStart, onBack }: Props) {
+export default function CustomBuilder({ exercises, onStart, onBack, presets, setPresets }: Props) {
   const [selectAll, setSelectAll] = useState(false);
   const [selectedCats, setSelectedCats] = useState<Set<Category>>(new Set());
   const [selectedMuscles, setSelectedMuscles] = useState<Set<string>>(new Set());
-  const [presets, setPresets] = useLocalStorage<CustomPreset[]>('wr_custom_presets', []);
   const [showNameInput, setShowNameInput] = useState(false);
   const [nameValue, setNameValue] = useState('');
   const [activePresetName, setActivePresetName] = useState<string | undefined>();

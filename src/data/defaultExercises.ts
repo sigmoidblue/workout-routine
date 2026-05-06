@@ -1,6 +1,6 @@
 import { Exercise, WorkoutEquipment } from '../types';
 
-export const EXERCISES_SEED_VERSION = 5;
+export const EXERCISES_SEED_VERSION = 6;
 
 let idCounter = 1;
 type Opts = { barbell?: boolean; equipment?: WorkoutEquipment };
@@ -26,6 +26,7 @@ export const defaultExercises: Exercise[] = [
   e('Incline Barbell Press',        'push', 'upper chest',     "Set the bench at 30°, not 45° — any steeper and your shoulders take over from your chest.",                                                       'compound', { barbell: true, equipment: 'gym' }),
   e('Overhead Press',               'push', 'shoulders',       "Brace your core and squeeze your glutes — a solid base is what lets your shoulders press more weight.",                                           'compound', { barbell: true, equipment: 'gym' }),
   e('Dips',                         'push', 'chest / triceps', "Lean forward for chest, stay upright for triceps — go deep enough to feel a genuine stretch.",                                                    'compound', { equipment: 'gym' }),
+  e('Assisted Dip',                 'push', 'chest / triceps', "Set the counterweight and go deep — same lean rules apply, the machine just lets you focus on form.",                                              'compound', { equipment: 'gym' }),
   e('Close-Grip Bench Press',       'push', 'triceps',         "Tuck your elbows to your sides — if they flare out, you've turned it into a regular bench press.",                                               'compound', { barbell: true, equipment: 'gym' }),
   e('Cable Fly',                    'push', 'chest',           "Keep a slight bend in your elbows and think of hugging a barrel — squeeze hard when the cables meet.",                                            'isolation', { equipment: 'gym' }),
   e('Cable Lateral Raise',          'push', 'side delts',      "Lead with your pinky and keep a soft elbow — no swinging or shrugging the weight up.",                                                           'isolation', { equipment: 'gym' }),
@@ -61,6 +62,8 @@ export const defaultExercises: Exercise[] = [
   e('Face Pull',                    'pull', 'rear delts',      "Pull to eye level and externally rotate at the end — this exercise keeps your shoulder health in check long term.",                              'isolation', { equipment: 'gym' }),
   e('Cable Bicep Curl',             'pull', 'biceps',          "Keep your elbows pinned at your sides — the cable keeps tension at the bottom where a dumbbell can't.",                                         'isolation', { equipment: 'gym' }),
   e('Straight-Arm Pulldown',        'pull', 'lats',            "Arms stay straight throughout — this isolates your lats without any bicep involvement.",                                                         'isolation', { equipment: 'gym' }),
+  e('Assisted Pull-up',             'pull', 'lats',            "Set the counterweight to reduce resistance — aim to lower it over time as you build strength.",                                                    'compound', { equipment: 'gym' }),
+  e('Assisted Chin-up',             'pull', 'biceps / lats',   "Use the counterweight to get full range of motion — chin over bar, full hang at the bottom.",                                                      'compound', { equipment: 'gym' }),
 
   // Bodyweight
   e('Pull-up',                      'pull', 'lats',            "Dead hang at the bottom every rep — partial reps only build partial lats.",                                                                       'compound', { equipment: 'home' }),

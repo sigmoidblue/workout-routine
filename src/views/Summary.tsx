@@ -17,17 +17,6 @@ const CATEGORY_LABELS: Record<Category, string> = {
   cardio: 'Cardio', crossfit: 'Crossfit', fullbody: 'Full Body', yoga: 'Yoga', custom: 'Custom Workout',
 };
 
-const CATEGORY_COLOR: Record<Category, string> = {
-  push:     'bg-indigo-400',
-  pull:     'bg-violet-400',
-  legs:     'bg-cyan-400',
-  core:     'bg-emerald-400',
-  cardio:   'bg-rose-400',
-  crossfit: 'bg-amber-400',
-  fullbody: 'bg-sky-400',
-  yoga:     'bg-pink-400',
-  custom:   'bg-gray-400',
-};
 
 function formatDate(dateStr: string) {
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {
@@ -112,12 +101,9 @@ export default function Summary({ log, exercises, streak, onDone }: Props) {
 
             {/* Card header */}
             <div className="px-6 pt-6 pb-5 border-b border-slate-50">
-              <div className="flex items-center gap-2.5 mb-1">
-                <span className={`w-2.5 h-2.5 rounded-full ${CATEGORY_COLOR[log.category]}`} />
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
-                  {log.name ?? CATEGORY_LABELS[log.category]}
-                </p>
-              </div>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">
+                {log.name ?? CATEGORY_LABELS[log.category]}
+              </p>
               <p className="text-slate-800 font-bold text-lg leading-tight">Workout complete</p>
               <p className="text-slate-500 text-sm mt-0.5">{formatDate(log.date)}</p>
             </div>

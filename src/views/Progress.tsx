@@ -107,12 +107,13 @@ export default function Progress({ workouts, exercises, onBack }: Props) {
   }, [weekWorkouts]);
 
   const catsThisWeek = useMemo(() => {
-    const seen = new Set<Category>();
-    const result: Category[] = [];
+    const seen = new Set<string>();
+    const result: { label: string; bg: string }[] = [];
     for (const w of weekWorkouts) {
-      if (!seen.has(w.category)) {
-        seen.add(w.category);
-        result.push(w.category);
+      const label = w.name ?? CAT_LABEL[w.category];
+      if (!seen.has(label)) {
+        seen.add(label);
+        result.push({ label, bg: CAT_BG[w.category] });
       }
     }
     return result;
@@ -267,7 +268,7 @@ export default function Progress({ workouts, exercises, onBack }: Props) {
                     <div key={w.id} className="mb-3 last:mb-0">
                       <div className="flex items-center gap-2 mb-2">
                         <div className={`w-2.5 h-2.5 rounded-full ${CAT_BG[w.category]}`} />
-                        <p className="text-xs font-semibold text-slate-700">{CAT_LABEL[w.category]}</p>
+                        <p className="text-xs font-semibold text-slate-700">{w.name ?? CAT_LABEL[w.category]}</p>
                       </div>
                       <div className="space-y-1.5">
                         {w.exercises.filter(we => we.done && !we.phase).map(we => {
@@ -323,12 +324,10 @@ export default function Progress({ workouts, exercises, onBack }: Props) {
                   Trained this week
                 </p>
                 <div className="flex flex-wrap gap-x-4 gap-y-2">
-                  {catsThisWeek.map((cat) => (
-                    <div key={cat} className="flex items-center gap-2">
-                      <div className={`w-2.5 h-2.5 rounded-full ${CAT_BG[cat]}`} />
-                      <p className="text-xs font-medium text-slate-600">
-                        {CAT_LABEL[cat]}
-                      </p>
+                  {catsThisWeek.map(({ label, bg }) => (
+                    <div key={label} className="flex items-center gap-2">
+                      <div className={`w-2.5 h-2.5 rounded-full ${bg}`} />
+                      <p className="text-xs font-medium text-slate-600">{label}</p>
                     </div>
                   ))}
                 </div>

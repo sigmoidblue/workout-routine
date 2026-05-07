@@ -242,7 +242,7 @@ export default function Home({ onStart, onLibrary, onProgress, workouts, filters
       </div>
 
       {/* Weekly strip */}
-      <div className="px-5 mb-4">
+      <div className="px-5 mb-4 fade-up fade-up-1">
         <button
           onClick={onProgress}
           className="w-full bg-white border border-slate-100 rounded-2xl px-4 py-3 shadow-sm flex items-center gap-3 hover:border-slate-200 active:scale-[0.99] transition-all"
@@ -282,14 +282,14 @@ export default function Home({ onStart, onLibrary, onProgress, workouts, filters
       </div>
 
       {/* Section label */}
-      <div className="px-5 pb-3">
+      <div className="px-5 pb-3 fade-up fade-up-2">
         <p className="text-xs font-medium text-slate-500 uppercase tracking-widest">
           Choose your workout
         </p>
       </div>
 
       {/* Category Grid */}
-      <div className="flex-1 px-5 pb-10">
+      <div className="flex-1 px-5 pb-10 fade-up fade-up-3">
         <div className="grid grid-cols-2 gap-2.5">
           {CATEGORIES.map((cat) => (
             <CategoryCard

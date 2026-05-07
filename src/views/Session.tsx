@@ -448,7 +448,7 @@ export default function Session({ category, exercises, existingLog, filters, onF
       )}
 
       {/* Header */}
-      <div className="px-5 pt-10 pb-6">
+      <div className="px-5 pt-10 pb-6 fade-up fade-up-1">
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={onBack}
@@ -518,7 +518,7 @@ export default function Session({ category, exercises, existingLog, filters, onF
 
       {/* Toggles */}
       {!existingLog && (
-        <div className="flex justify-center gap-2.5 pb-4 flex-wrap px-5">
+        <div className="flex justify-center gap-2.5 pb-4 flex-wrap px-5 fade-up fade-up-2">
           {(['Warm-up & Cool-down', 'Supersets'] as const).map((label) => {
             const active = label === 'Supersets' ? ssEnabled : wucdEnabled;
             const onToggle = label === 'Supersets' ? toggleSS : toggleWUCD;
@@ -546,7 +546,7 @@ export default function Session({ category, exercises, existingLog, filters, onF
       <div className="h-px bg-slate-100 mx-5" />
 
       {/* Exercise List */}
-      <div className="flex-1 px-5 pt-4 pb-36 overflow-y-auto">
+      <div className="flex-1 px-5 pt-4 pb-36 overflow-y-auto fade-up fade-up-3">
 
         {/* Warm-up section */}
         {wucdEnabled && (() => {

@@ -226,18 +226,10 @@ function Confetti() {
 }
 
 export default function Session({ category, exercises, existingLog, filters, onFinish, onSave, onBack, customPool, customName }: Props) {
-  const poolSize = (customPool ?? exercises).filter((e) => {
-    if (!customPool && e.category !== category) return false;
-    if (!filters.equipment) return true;
-    const req = e.equipment ?? 'gym';
-    if (filters.equipment === 'gym') return true;
-    if (filters.equipment === 'dumbbells') return req === 'dumbbells' || req === 'home';
-    return req === 'home';
-  }).length;
   const defaultCount = filters.duration === 30 ? 5 : filters.duration === 45 ? 6 : filters.duration === 60 ? 8 : 7;
-  const [count, setCount] = useState(() => Math.min(defaultCount, poolSize));
+  const [count, setCount] = useState(defaultCount);
+  const { picked, reroll, poolSize } = useExercisePicker(exercises, category, count, filters.equipment, customPool);
   useEffect(() => { setCount(Math.min(defaultCount, poolSize)); }, [defaultCount, poolSize]);
-  const { picked, reroll } = useExercisePicker(exercises, category, count, filters.equipment, customPool);
   const [workoutExercises, setWorkoutExercises] = useState<WorkoutExercise[]>([]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [pulsing, setPulsing] = useState(false);
@@ -260,8 +252,10 @@ export default function Session({ category, exercises, existingLog, filters, onF
       const cooldownItems = current.filter((e) => e.phase === 'cooldown');
       const doneItems = current.filter((e) => e.done && !e.phase);
       const doneIds = new Set(doneItems.map((e) => e.exerciseId));
+      const slotsForNew = Math.max(0, picked.length - doneItems.length);
       const newItems = picked
         .filter((ex) => !doneIds.has(ex.id))
+        .slice(0, slotsForNew)
         .map((ex) => ({ exerciseId: ex.id, done: false, sets: [] }));
       const mainItems = [...doneItems, ...newItems];
       const combined = [...warmupItems, ...mainItems, ...cooldownItems];
@@ -419,12 +413,16 @@ export default function Session({ category, exercises, existingLog, filters, onF
       const newPos = items.findIndex((item) => item.id === over.id);
       if (oldPos === -1 || newPos === -1) return prev;
       const reordered = arrayMove(items, oldPos, newPos);
-      const result: WorkoutExercise[] = [];
+      // Preserve phase items and barbell, only reorder work sets
+      const warmupItems = prev.filter((we) => we.phase === 'warmup');
+      const cooldownItems = prev.filter((we) => we.phase === 'cooldown');
+      const result: WorkoutExercise[] = [...warmupItems];
       if (pIdx !== -1) result.push(prev[pIdx]);
       for (const item of reordered) {
         if (item.kind === 'single') result.push(prev[item.idx]);
         else { result.push(prev[item.idxA]); result.push(prev[item.idxB]); }
       }
+      result.push(...cooldownItems);
       return result;
     });
   };

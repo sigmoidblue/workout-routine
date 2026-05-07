@@ -128,7 +128,7 @@ export default function CustomBuilder({ exercises, onStart, onBack, presets, set
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <div className="px-5 pt-10 pb-4">
+      <div className="px-5 pt-10 pb-4 fade-up fade-up-1">
         <div className="flex items-center gap-3 mb-2">
           <button
             onClick={onBack}
@@ -192,7 +192,7 @@ export default function CustomBuilder({ exercises, onStart, onBack, presets, set
         )}
       </div>
 
-      <div className="flex-1 px-5 pb-36 space-y-6">
+      <div className="flex-1 px-5 pb-36 space-y-6 fade-up fade-up-2">
         {/* Categories */}
         <div>
           <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2.5">Categories</p>

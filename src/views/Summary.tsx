@@ -1,6 +1,9 @@
 import { useState, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { WorkoutLog, Exercise, StreakData, Category } from '../types';
+import { defaultExercises } from '../data/defaultExercises';
+
+const barbellIds = new Set(defaultExercises.filter((e) => e.barbell).map((e) => e.id));
 
 type Props = {
   log: WorkoutLog;
@@ -35,6 +38,14 @@ function formatDate(dateStr: string) {
 export default function Summary({ log, exercises, streak, onDone }: Props) {
   const [capturing, setCapturing] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+
+  // Re-order to match session visual layout: warmup → barbell → work sets → cooldown
+  const sortedExercises = [
+    ...log.exercises.filter((e) => e.phase === 'warmup'),
+    ...log.exercises.filter((e) => !e.phase && barbellIds.has(e.exerciseId)),
+    ...log.exercises.filter((e) => !e.phase && !barbellIds.has(e.exerciseId)),
+    ...log.exercises.filter((e) => e.phase === 'cooldown'),
+  ];
 
   const done = log.exercises.filter((e) => e.done);
   const total = log.exercises.length;
@@ -113,7 +124,7 @@ export default function Summary({ log, exercises, streak, onDone }: Props) {
 
             {/* Exercise list */}
             <div className="px-6 py-2 divide-y divide-slate-50">
-              {log.exercises.map((we) => {
+              {sortedExercises.map((we) => {
                 const ex = exercises.find((e) => e.id === we.exerciseId);
                 if (!ex) return null;
                 const setsDone = (we.sets ?? []).filter((s) => s.reps > 0);

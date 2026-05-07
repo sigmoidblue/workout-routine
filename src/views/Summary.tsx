@@ -115,7 +115,7 @@ export default function Summary({ log, exercises, streak, onDone }: Props) {
               <div className="flex items-center gap-2.5 mb-1">
                 <span className={`w-2.5 h-2.5 rounded-full ${CATEGORY_COLOR[log.category]}`} />
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">
-                  {CATEGORY_LABELS[log.category]}
+                  {log.name ?? CATEGORY_LABELS[log.category]}
                 </p>
               </div>
               <p className="text-slate-800 font-bold text-lg leading-tight">Workout complete</p>

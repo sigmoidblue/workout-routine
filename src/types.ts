@@ -41,6 +41,7 @@ export type WorkoutLog = {
   category: Category;
   exercises: WorkoutExercise[];
   completedAt?: string;
+  name?: string;
 };
 
 export type StreakData = {

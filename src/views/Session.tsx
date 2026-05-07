@@ -316,6 +316,7 @@ export default function Session({ category, exercises, existingLog, filters, onF
       category,
       exercises: workoutExercises,
       completedAt: new Date().toISOString(),
+      ...(customName ? { name: customName } : {}),
     };
     setTimeout(() => {
       setShowConfetti(false);

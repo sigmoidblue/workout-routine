@@ -465,7 +465,7 @@ export default function Session({ category, exercises, existingLog, filters, onF
           {!existingLog && (
             <div className="flex items-center bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
               <button
-                onClick={() => setCount((c) => Math.max(2, c - 1))}
+                onClick={() => setCount((c) => Math.max(1, c - 1))}
                 className="px-2.5 py-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors border-r border-slate-100"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -507,7 +507,7 @@ export default function Session({ category, exercises, existingLog, filters, onF
               </p>
             ) : (
               <p className="text-xs text-slate-500">
-                {total > 0 ? `${total} exercises` : ''}
+                {total > 0 ? `${total} exercise${total === 1 ? '' : 's'}` : ''}
               </p>
             )}
           </div>

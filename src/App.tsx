@@ -27,7 +27,8 @@ export default function App() {
   });
   const { streak, incrementStreak } = useStreak();
 
-  const [view, setView] = useState<View>('home');
+  const [view, setViewRaw] = useState<View>('home');
+  const setView = (v: View) => { setViewRaw(v); window.scrollTo(0, 0); };
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const [summaryLog, setSummaryLog] = useState<WorkoutLog | null>(null);
   const [presets, setPresets] = useLocalStorage<CustomPreset[]>('wr_custom_presets', []);

@@ -29,7 +29,7 @@ function getWeekDays(today: string): string[] {
   });
 }
 
-const CATEGORIES: Category[] = ['push', 'pull', 'legs', 'core', 'cardio', 'crossfit', 'fullbody', 'yoga', 'custom'];
+const CATEGORIES: Category[] = ['push', 'pull', 'legs', 'core', 'cardio', 'crossfit', 'fullbody', 'yoga'];
 
 const CAT_LABEL_SHORT: Record<Category, string> = {
   push: 'Push', pull: 'Pull', legs: 'Legs', core: 'Core',
@@ -315,6 +315,11 @@ export default function Home({ onStart, onLibrary, onProgress, workouts, filters
               />
             );
           })}
+          <CategoryCard
+            category="custom"
+            onClick={() => onStart('custom')}
+            hasWorkout={workouts.some((w) => w.date === today && w.category === 'custom')}
+          />
         </div>
       </div>
     </div>

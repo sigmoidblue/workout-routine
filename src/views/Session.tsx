@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Category, Exercise, WorkoutLog, WorkoutExercise, WorkoutFilters } from '../types';
-import { useExercisePicker } from '../hooks/useExercisePicker';
+import { useExercisePicker, matchesEquipment } from '../hooks/useExercisePicker';
 import { defaultExercises } from '../data/defaultExercises';
 import { supersets } from '../data/supersetLibrary';
 import type { Goal, Equipment, Experience } from '../data/supersetLibrary';
@@ -393,6 +393,68 @@ export default function Session({ category, exercises, existingLog, filters, onF
     return unpairedIds.map((id) => getExercise(id)!).filter(Boolean);
   };
 
+  // Handlers for adding/removing exercises on existing (completed) logs
+  const handleAddExercise = () => {
+    const inSession = new Set(workoutExercises.map((w) => w.exerciseId));
+    const altSource = customPool ?? exercises;
+    const pool = altSource.filter(
+      (e) =>
+        (customPool ? true : e.category === category) &&
+        matchesEquipment(e, filters.equipment) &&
+        !inSession.has(e.id)
+    );
+    if (pool.length === 0) return;
+    const randomEx = pool[Math.floor(Math.random() * pool.length)];
+    setWorkoutExercises((prev) => {
+      const cooldownItems = prev.filter((we) => we.phase === 'cooldown');
+      const rest = prev.filter((we) => we.phase !== 'cooldown');
+      return [...rest, { exerciseId: randomEx.id, done: false, sets: [] }, ...cooldownItems];
+    });
+  };
+
+  const handleRemoveExercise = () => {
+    setWorkoutExercises((prev) => {
+      const nonPhaseCount = prev.filter((we) => !we.phase).length;
+      if (nonPhaseCount <= 1) return prev;
+      let lastIdx = -1;
+      for (let i = prev.length - 1; i >= 0; i--) {
+        if (!prev[i].phase) { lastIdx = i; break; }
+      }
+      if (lastIdx === -1) return prev;
+      const removed = prev[lastIdx];
+      const result = prev.filter((_, i) => i !== lastIdx);
+      if (removed.supersetGroup) {
+        return result.map((we) =>
+          we.supersetGroup === removed.supersetGroup ? { ...we, supersetGroup: undefined } : we
+        );
+      }
+      return result;
+    });
+  };
+
+  const handleRerollExisting = () => {
+    const inSession = new Set(workoutExercises.filter((we) => we.done || we.phase).map((w) => w.exerciseId));
+    const altSource = customPool ?? exercises;
+    const pool = altSource.filter(
+      (e) =>
+        (customPool ? true : e.category === category) &&
+        matchesEquipment(e, filters.equipment) &&
+        !inSession.has(e.id)
+    );
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    let poolIdx = 0;
+    setWorkoutExercises((prev) =>
+      prev.map((we) => {
+        if (we.phase || we.done) return we;
+        if (poolIdx < shuffled.length) {
+          const newEx = shuffled[poolIdx++];
+          return { exerciseId: newEx.id, done: false, sets: [], supersetGroup: we.supersetGroup };
+        }
+        return we;
+      })
+    );
+  };
+
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
 
@@ -462,35 +524,33 @@ export default function Session({ category, exercises, existingLog, filters, onF
             </p>
             <h1 className="text-xl font-bold text-slate-900">{customName ?? CATEGORY_LABELS[category]}</h1>
           </div>
-          {!existingLog && (
-            <div className="flex items-center bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
-              <button
-                onClick={() => setCount((c) => Math.max(1, c - 1))}
-                className="px-2.5 py-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors border-r border-slate-100"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
-                </svg>
-              </button>
-              <button
-                onClick={reroll}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                {count}
-              </button>
-              <button
-                onClick={() => setCount((c) => Math.min(poolSize, c + 1))}
-                className="px-2.5 py-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors border-l border-slate-100"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-              </button>
-            </div>
-          )}
+          <div className="flex items-center bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
+            <button
+              onClick={() => existingLog ? handleRemoveExercise() : setCount((c) => Math.max(1, c - 1))}
+              className="px-2.5 py-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors border-r border-slate-100"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
+              </svg>
+            </button>
+            <button
+              onClick={() => existingLog ? handleRerollExisting() : reroll()}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-50 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {existingLog ? total : count}
+            </button>
+            <button
+              onClick={() => existingLog ? handleAddExercise() : setCount((c) => Math.min(poolSize, c + 1))}
+              className="px-2.5 py-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors border-l border-slate-100"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Progress Ring + milestone message */}

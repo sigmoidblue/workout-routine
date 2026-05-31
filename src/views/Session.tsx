@@ -271,7 +271,8 @@ export default function Session({ category, exercises, existingLog, filters, onF
 
   // Auto-save changes for all sessions (fresh and resumed)
   useEffect(() => {
-    if (!onSave || workoutExercises.length === 0) return;
+    const hasProgress = workoutExercises.some((e) => e.done && !e.phase);
+    if (!onSave || workoutExercises.length === 0 || !hasProgress) return;
     const t = setTimeout(() => {
       onSave({
         id: logIdRef.current,

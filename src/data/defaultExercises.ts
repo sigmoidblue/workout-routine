@@ -1,6 +1,6 @@
 import { Exercise, WorkoutEquipment } from '../types';
 
-export const EXERCISES_SEED_VERSION = 6;
+export const EXERCISES_SEED_VERSION = 7;
 
 let idCounter = 1;
 type Opts = { barbell?: boolean; equipment?: WorkoutEquipment };
@@ -31,6 +31,7 @@ export const defaultExercises: Exercise[] = [
   e('Cable Fly',                    'push', 'chest',           "Keep a slight bend in your elbows and think of hugging a barrel — squeeze hard when the cables meet.",                                            'isolation', { equipment: 'gym' }),
   e('Cable Lateral Raise',          'push', 'side delts',      "Lead with your pinky and keep a soft elbow — no swinging or shrugging the weight up.",                                                           'isolation', { equipment: 'gym' }),
   e('Tricep Pushdown',              'push', 'triceps',         "Pin your elbows to your sides — if they're drifting back, your back is doing the work.",                                                         'isolation', { equipment: 'gym' }),
+  e('Single-Arm Tricep Pushdown',  'push', 'triceps',         "One arm at a time lets you fix imbalances — lock your elbow in place and squeeze at full extension.",                                              'isolation', { equipment: 'gym' }),
   e('Overhead Tricep Extension',    'push', 'triceps',         "Get a full stretch at the bottom — the long head loves this range and it's what builds the horseshoe shape.",                                    'isolation', { equipment: 'gym' }),
   e('Machine Chest Press',          'push', 'chest',           "Great for isolating the chest without worrying about balance — squeeze hard at full extension.",                                                  'isolation', { equipment: 'gym' }),
   e('Pec Deck',                     'push', 'chest',           "Keep your chest up and don't let your elbows travel too far back — a stretch is good, shoulder pain is not.",                                    'isolation', { equipment: 'gym' }),
@@ -61,6 +62,8 @@ export const defaultExercises: Exercise[] = [
   e('Chest-Supported Row',          'pull', 'upper back',      "Chest stays on the pad the whole time — this removes any temptation to use your lower back.",                                                    'compound', { equipment: 'gym' }),
   e('Face Pull',                    'pull', 'rear delts',      "Pull to eye level and externally rotate at the end — this exercise keeps your shoulder health in check long term.",                              'isolation', { equipment: 'gym' }),
   e('Cable Bicep Curl',             'pull', 'biceps',          "Keep your elbows pinned at your sides — the cable keeps tension at the bottom where a dumbbell can't.",                                         'isolation', { equipment: 'gym' }),
+  e('Single-Arm Cable Curl',       'pull', 'biceps',          "Unilateral curls expose weak spots — keep your elbow fixed and control the negative for maximum tension.",                                        'isolation', { equipment: 'gym' }),
+  e('Machine Row',                 'pull', 'upper back',      "Chest stays on the pad and pull your elbows straight back — great for isolating your back without lower back fatigue.",                            'compound', { equipment: 'gym' }),
   e('Straight-Arm Pulldown',        'pull', 'lats',            "Arms stay straight throughout — this isolates your lats without any bicep involvement.",                                                         'isolation', { equipment: 'gym' }),
   e('Assisted Pull-up',             'pull', 'lats',            "Set the counterweight to reduce resistance — aim to lower it over time as you build strength.",                                                    'compound', { equipment: 'gym' }),
   e('Assisted Chin-up',             'pull', 'biceps / lats',   "Use the counterweight to get full range of motion — chin over bar, full hang at the bottom.",                                                      'compound', { equipment: 'gym' }),

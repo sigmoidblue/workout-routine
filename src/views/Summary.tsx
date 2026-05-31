@@ -39,6 +39,22 @@ export default function Summary({ log, exercises, streak, onDone }: Props) {
   const done = log.exercises.filter((e) => e.done);
   const total = log.exercises.length;
 
+  // Compute stats from done non-phase exercises
+  const cardStats = (() => {
+    let sets = 0, reps = 0, volume = 0;
+    for (const we of log.exercises) {
+      if (!we.done || we.phase) continue;
+      for (const s of we.sets ?? []) {
+        if (s.reps > 0) {
+          sets++;
+          reps += s.reps;
+          volume += s.reps * (s.weight ?? 0);
+        }
+      }
+    }
+    return { sets, reps, volume };
+  })();
+
   const handleShareImage = async () => {
     if (!cardRef.current) return;
     setCapturing(true);
@@ -100,51 +116,104 @@ export default function Summary({ log, exercises, streak, onDone }: Props) {
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
 
             {/* Card header */}
-            <div className="px-6 pt-6 pb-5 border-b border-slate-50">
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">
+            <div className="px-6 pt-5 pb-5 border-b border-slate-50">
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1">Workout complete</p>
+              <p className="text-slate-800 font-bold text-xl leading-tight">
                 {log.name ?? CATEGORY_LABELS[log.category]}
               </p>
-              <p className="text-slate-800 font-bold text-lg leading-tight">Workout complete</p>
-              <p className="text-slate-500 text-sm mt-0.5">{formatDate(log.date)}</p>
+              <p className="text-slate-400 text-sm mt-0.5">{formatDate(log.date)}</p>
             </div>
 
+            {/* Stats row */}
+            {cardStats.sets > 0 && (
+              <div className="px-6 py-4 border-b border-slate-50">
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  {[
+                    { label: 'SETS', value: String(cardStats.sets) },
+                    { label: 'REPS', value: String(cardStats.reps) },
+                    { label: 'VOLUME', value: cardStats.volume >= 1000 ? `${(cardStats.volume / 1000).toFixed(1)}k kg` : cardStats.volume > 0 ? `${cardStats.volume} kg` : '—' },
+                  ].map(({ label, value }) => (
+                    <div key={label}>
+                      <p className="text-lg font-bold text-indigo-600">{value}</p>
+                      <p className="text-[9px] text-slate-400 font-semibold tracking-wider mt-0.5">{label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Exercise list */}
-            <div className="px-6 py-2 divide-y divide-slate-50">
-              {sortedExercises.map((we) => {
-                const ex = exercises.find((e) => e.id === we.exerciseId);
-                if (!ex) return null;
-                const setsDone = (we.sets ?? []).filter((s) => s.reps > 0);
-                return (
-                  <div key={we.exerciseId} className="flex items-center gap-3 py-3">
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      we.done ? 'bg-emerald-500' : 'bg-slate-100'
-                    }`}>
-                      {we.done ? (
-                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      ) : (
-                        <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium ${we.done ? 'text-slate-800' : 'text-slate-400 line-through'}`}>
-                        {ex.name}
-                      </p>
-                      {setsDone.length > 0 && (
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          {setsDone.map((s, i) => (
-                            <span key={i}>
-                              {i > 0 && <span className="mx-1 text-slate-200">·</span>}
-                              {s.reps} reps{s.weight ? ` @ ${s.weight}kg` : ''}
-                            </span>
-                          ))}
+            <div className="px-6 py-2">
+              {(() => {
+                // Group exercises: supersets paired, singles standalone
+                type Group = { ss: boolean; items: typeof sortedExercises };
+                const groups: Group[] = [];
+                const seen = new Set<string>();
+                for (const we of sortedExercises) {
+                  if (seen.has(we.exerciseId)) continue;
+                  seen.add(we.exerciseId);
+                  if (we.supersetGroup && !we.phase) {
+                    const partner = sortedExercises.find(
+                      (o) => o.supersetGroup === we.supersetGroup && o.exerciseId !== we.exerciseId && !seen.has(o.exerciseId)
+                    );
+                    if (partner) {
+                      seen.add(partner.exerciseId);
+                      groups.push({ ss: true, items: [we, partner] });
+                      continue;
+                    }
+                  }
+                  groups.push({ ss: false, items: [we] });
+                }
+
+                const renderExercise = (we: typeof sortedExercises[0], showBorder?: boolean) => {
+                  const ex = exercises.find((e) => e.id === we.exerciseId);
+                  if (!ex) return null;
+                  const setsDone = (we.sets ?? []).filter((s) => s.reps > 0);
+                  return (
+                    <div key={we.exerciseId} className={`flex items-center gap-3 py-3 ${showBorder ? 'border-t border-slate-50' : ''}`}>
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        we.done ? 'bg-emerald-500' : 'bg-slate-100'
+                      }`}>
+                        {we.done ? (
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <div className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-medium ${we.done ? 'text-slate-800' : 'text-slate-400 line-through'}`}>
+                          {ex.name}
                         </p>
-                      )}
+                        {setsDone.length > 0 && (
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            {setsDone.map((s, i) => (
+                              <span key={i}>
+                                {i > 0 && <span className="mx-1 text-slate-200">·</span>}
+                                {s.reps} reps{s.weight ? ` @ ${s.weight}kg` : ''}
+                              </span>
+                            ))}
+                          </p>
+                        )}
+                      </div>
                     </div>
+                  );
+                };
+
+                // Flatten all groups into a single list
+                const supersetIds = new Set<string>();
+                for (const g of groups) {
+                  if (g.ss) g.items.forEach((we) => supersetIds.add(we.exerciseId));
+                }
+                const flatItems = groups.flatMap((g) => g.items);
+
+                return flatItems.map((we, i) =>
+                  <div key={we.exerciseId} className={`${i > 0 ? 'border-t border-slate-50' : ''} ${supersetIds.has(we.exerciseId) ? 'border-l-2 border-l-indigo-400 pl-2' : ''}`}>
+                    {renderExercise(we)}
                   </div>
                 );
-              })}
+              })()}
             </div>
 
             {/* Card footer */}

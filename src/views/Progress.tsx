@@ -218,14 +218,21 @@ export default function Progress({ workouts, exercises, onBack }: Props) {
         {/* Capture target */}
         <div ref={cardRef} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
 
+            {/* In-card header */}
+            <div className="px-6 pt-5 pb-3 border-b border-slate-100">
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Weekly Recap</p>
+              <p className="text-slate-800 font-bold text-sm mt-0.5">{formatWeekLabel(weekStart)}</p>
+            </div>
+
             {/* 7-day strip */}
-            <div className="px-6 pt-5 pb-4">
+            <div className="px-6 pt-4 pb-4">
               <div className="flex justify-between">
                 {weekDays.map((dateStr, i) => {
                   const workout = dayMap.get(dateStr);
                   const isToday = dateStr === todayStr;
                   const isFuture = dateStr > todayStr;
                   const isSelected = selectedDay === dateStr;
+                  const dayNum = new Date(dateStr + 'T12:00:00').getDate();
                   return (
                     <button
                       key={i}
@@ -235,7 +242,7 @@ export default function Progress({ workouts, exercises, onBack }: Props) {
                       <p className={`text-[10px] font-semibold ${isToday ? 'text-indigo-500' : 'text-slate-400'}`}>
                         {DAYS[i]}
                       </p>
-                      <div className={`w-5 h-5 rounded-full transition-all ${
+                      <div className={`w-6 h-6 rounded-full transition-all ${
                         workout
                           ? CAT_BG[workout.category]
                           : isFuture
@@ -243,6 +250,7 @@ export default function Progress({ workouts, exercises, onBack }: Props) {
                             : 'bg-slate-200'
                       } ${isToday ? 'ring-2 ring-offset-2 ring-indigo-300' : ''} ${isSelected ? 'ring-2 ring-offset-2 ring-slate-400 scale-125' : ''}`}>
                       </div>
+                      <p className={`text-[9px] font-medium ${isToday ? 'text-indigo-500' : 'text-slate-300'}`}>{dayNum}</p>
                     </button>
                   );
                 })}
@@ -310,7 +318,7 @@ export default function Progress({ workouts, exercises, onBack }: Props) {
                   { label: 'Volume', value: formatTonnage(stats.tonnage) },
                 ].map(({ label, value }) => (
                   <div key={label}>
-                    <p className="text-lg font-bold text-slate-800">{value}</p>
+                    <p className="text-lg font-bold text-indigo-600">{value}</p>
                     <p className="text-[10px] text-slate-400 font-medium mt-1">{label}</p>
                   </div>
                 ))}
@@ -371,8 +379,8 @@ export default function Progress({ workouts, exercises, onBack }: Props) {
 
             {/* Footer */}
             <div className="px-6 py-3 bg-slate-50 border-t border-slate-100">
-              <p className="text-[10px] text-slate-400 text-center font-medium">
-                {formatWeekLabel(weekStart)}
+              <p className="text-[10px] text-slate-300 text-center font-medium">
+                Workout Routine · {formatWeekLabel(weekStart)}
               </p>
             </div>
 

@@ -242,10 +242,13 @@ export default function Session({ category, exercises, existingLog, filters, onF
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevCompleted = useRef(0);
   const logIdRef = useRef(existingLog?.id ?? makeId());
+  const isResumed = useRef(!!existingLog);
+  const isCompleted = !!existingLog?.completedAt;
 
   useEffect(() => {
-    if (existingLog) {
-      setWorkoutExercises(existingLog.exercises);
+    if (isResumed.current) {
+      setWorkoutExercises(existingLog!.exercises);
+      isResumed.current = false;
       return;
     }
     setWorkoutExercises((current) => {
@@ -264,7 +267,7 @@ export default function Session({ category, exercises, existingLog, filters, onF
       return ssEnabled ? buildSupersets(combined, exercises, filters) : combined;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [picked, existingLog]);
+  }, [picked]);
 
   // Auto-save changes for all sessions (fresh and resumed)
   useEffect(() => {
@@ -576,7 +579,7 @@ export default function Session({ category, exercises, existingLog, filters, onF
       </div>
 
       {/* Toggles */}
-      {!existingLog && (
+      {!isCompleted && (
         <div className="flex justify-center gap-2.5 pb-4 flex-wrap px-5 fade-up fade-up-2">
           {(['Warm-up & Cool-down', 'Supersets'] as const).map((label) => {
             const active = label === 'Supersets' ? ssEnabled : wucdEnabled;
@@ -692,7 +695,7 @@ export default function Session({ category, exercises, existingLog, filters, onF
                           slotA={{ exercise: ex, workoutEx: we, onChange: (u) => handleExerciseChange(item.idxA, u), alternatives: getAlternatives(we), onSwap: (id) => handleSwap(item.idxA, id) }}
                           slotB={{ exercise: partnerEx, workoutEx: partnerWe, onChange: (u) => handleExerciseChange(item.idxB, u), alternatives: getAlternatives(partnerWe), onSwap: (id) => handleSwap(item.idxB, id) }}
                           onUnlink={() => handleUnlink(we.supersetGroup!)}
-                          dragHandleProps={!existingLog ? hp : undefined}
+                          dragHandleProps={!isCompleted ? hp : undefined}
                         />
                       )}
                     </SortableItem>
@@ -713,7 +716,7 @@ export default function Session({ category, exercises, existingLog, filters, onF
                         ssEnabled={ssEnabled}
                         linkable={ssEnabled ? getLinkable(we.exerciseId) : undefined}
                         onLink={(partnerId) => handleLink(we.exerciseId, partnerId)}
-                        dragHandleProps={!existingLog ? hp : undefined}
+                        dragHandleProps={!isCompleted ? hp : undefined}
                       />
                     )}
                   </SortableItem>

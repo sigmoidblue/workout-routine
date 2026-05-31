@@ -241,6 +241,7 @@ export default function Session({ category, exercises, existingLog, filters, onF
   const handleTimerClose = useCallback(() => setShowTimer(false), []);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevCompleted = useRef(0);
+  const logIdRef = useRef(existingLog?.id ?? makeId());
 
   useEffect(() => {
     if (existingLog) {
@@ -265,16 +266,16 @@ export default function Session({ category, exercises, existingLog, filters, onF
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [picked, existingLog]);
 
-  // Auto-save changes when resuming an existing log
+  // Auto-save changes for all sessions (fresh and resumed)
   useEffect(() => {
-    if (!existingLog || !onSave || workoutExercises.length === 0) return;
+    if (!onSave || workoutExercises.length === 0) return;
     const t = setTimeout(() => {
       onSave({
-        id: existingLog.id,
-        date: existingLog.date,
+        id: logIdRef.current,
+        date: existingLog?.date ?? todayStr(),
         category,
         exercises: workoutExercises,
-        completedAt: existingLog.completedAt,
+        completedAt: existingLog?.completedAt,
       });
     }, 600);
     return () => clearTimeout(t);
@@ -305,7 +306,7 @@ export default function Session({ category, exercises, existingLog, filters, onF
   const handleFinish = () => {
     setShowConfetti(true);
     const log: WorkoutLog = {
-      id: existingLog?.id ?? makeId(),
+      id: logIdRef.current,
       date: todayStr(),
       category,
       exercises: workoutExercises,

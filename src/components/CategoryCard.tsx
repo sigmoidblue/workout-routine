@@ -4,6 +4,7 @@ type Props = {
   category: Category;
   onClick: () => void;
   hasWorkout?: boolean;
+  workoutStatus?: 'done' | 'in-progress';
   labelOverride?: string;
   subOverride?: string;
   dotOverride?: string;
@@ -21,7 +22,7 @@ const META: Record<Category, { label: string; sub: string; dot: string }> = {
   custom:   { label: 'Custom',    sub: 'Mix & Match',                   dot: 'bg-orange-400' },
 };
 
-export default function CategoryCard({ category, onClick, hasWorkout, labelOverride, subOverride, dotOverride }: Props) {
+export default function CategoryCard({ category, onClick, hasWorkout, workoutStatus, labelOverride, subOverride, dotOverride }: Props) {
   const meta = META[category];
   const label = labelOverride ?? meta.label;
   const sub = subOverride ?? meta.sub;
@@ -36,7 +37,12 @@ export default function CategoryCard({ category, onClick, hasWorkout, labelOverr
         <div className="flex-1 min-w-0 space-y-2.5">
           <div className="flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dot}`} />
-            {hasWorkout && (
+            {hasWorkout && workoutStatus === 'in-progress' && (
+              <span className="text-[10px] font-medium text-amber-600 bg-amber-50 border border-amber-100 rounded-full px-2 py-0.5 leading-none">
+                In Progress
+              </span>
+            )}
+            {hasWorkout && workoutStatus !== 'in-progress' && (
               <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-full px-2 py-0.5 leading-none">
                 Done
               </span>

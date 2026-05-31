@@ -153,7 +153,7 @@ export default function App() {
           existingLog={existingLog}
           filters={filters}
           onFinish={handleFinish}
-          onSave={existingLog ? handleSave : undefined}
+          onSave={handleSave}
           onBack={goBack}
           customPool={customPool ?? undefined}
           customName={customName}

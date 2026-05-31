@@ -92,7 +92,8 @@ function FilterPills<T extends string | number>({
 export default function Home({ onStart, onLibrary, onProgress, workouts, filters, onFiltersChange, presets, onStartPreset }: Props) {
   const { streak } = useStreak();
   const today = todayStr();
-  const todayWorkout = workouts.find((w) => w.date === today);
+  const todayWorkout = workouts.find((w) => w.date === today && w.completedAt);
+  const todayInProgress = workouts.find((w) => w.date === today && !w.completedAt);
   const [showFilters, setShowFilters] = useState(false);
   const weekDays = useMemo(() => getWeekDays(today), [today]);
   const dayMap = useMemo(() => {
@@ -218,6 +219,27 @@ export default function Home({ onStart, onLibrary, onProgress, workouts, filters
         )}
 
         {/* Today's status */}
+        {todayInProgress && !todayWorkout && (
+          <div className="mt-5 bg-white border border-amber-100 rounded-2xl px-4 py-3 flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
+                <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-800">In progress</p>
+                <p className="text-xs text-slate-500 capitalize">{todayInProgress.category} session</p>
+              </div>
+            </div>
+            <button
+              onClick={() => onStart(todayInProgress.category)}
+              className="text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
+            >
+              Resume
+            </button>
+          </div>
+        )}
         {todayWorkout && (
           <div className="mt-5 bg-white border border-emerald-100 rounded-2xl px-4 py-3 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3">
@@ -297,6 +319,7 @@ export default function Home({ onStart, onLibrary, onProgress, workouts, filters
               category={cat}
               onClick={() => onStart(cat)}
               hasWorkout={workouts.some((w) => w.date === today && w.category === cat)}
+              workoutStatus={(() => { const w = workouts.find((w) => w.date === today && w.category === cat); return w ? (w.completedAt ? 'done' : 'in-progress') : undefined; })()}
             />
           ))}
           {presets.map((preset) => {
@@ -319,6 +342,7 @@ export default function Home({ onStart, onLibrary, onProgress, workouts, filters
             category="custom"
             onClick={() => onStart('custom')}
             hasWorkout={workouts.some((w) => w.date === today && w.category === 'custom')}
+            workoutStatus={(() => { const w = workouts.find((w) => w.date === today && w.category === 'custom'); return w ? (w.completedAt ? 'done' : 'in-progress') : undefined; })()}
           />
         </div>
       </div>

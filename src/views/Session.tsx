@@ -423,7 +423,7 @@ export default function Session({ category, exercises, existingLog, filters, onF
       if (nonPhaseCount <= 1) return prev;
       let lastIdx = -1;
       for (let i = prev.length - 1; i >= 0; i--) {
-        if (!prev[i].phase) { lastIdx = i; break; }
+        if (!prev[i].phase && !prev[i].done) { lastIdx = i; break; }
       }
       if (lastIdx === -1) return prev;
       const removed = prev[lastIdx];

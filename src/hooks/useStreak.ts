@@ -8,8 +8,6 @@ const daysBetween = (a: string, b: string) => {
   return Math.round((new Date(b).getTime() - new Date(a).getTime()) / msPerDay);
 };
 
-const isSunday = (dateStr: string) => new Date(dateStr).getDay() === 0;
-
 const defaultStreak: StreakData = {
   current: 0,
   lastWorkoutDate: '',
@@ -50,10 +48,8 @@ export function useStreak() {
         const diff = daysBetween(prev.lastWorkoutDate, todayStr);
         if (diff === 1) {
           newCurrent = prev.current + 1;
-        } else if (diff === 2 && isSunday(prev.lastWorkoutDate + 'T12:00:00')) {
-          // Sunday was skipped, don't break streak
-          // Actually check if the gap day is a Sunday
-          const gapDate = new Date(prev.lastWorkoutDate);
+        } else if (diff === 2) {
+          const gapDate = new Date(prev.lastWorkoutDate + 'T12:00:00');
           gapDate.setDate(gapDate.getDate() + 1);
           if (gapDate.getDay() === 0) {
             newCurrent = prev.current + 1;
